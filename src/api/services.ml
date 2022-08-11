@@ -52,7 +52,7 @@ let version_test_json_body : (request_v, version, server_error_type, no_security
     ~params:[]
     ~input:Encoding.request_v_enc
     ~output:Encoding.version_enc
-    (* ~errors:Errors.server_errors *)
+    ~errors:Errors.server_errors
     Path.(root // "version_json_body")
 
 let sr_job_desc : (job_desc_req, jobs, server_error_type, no_security) post_service0 =

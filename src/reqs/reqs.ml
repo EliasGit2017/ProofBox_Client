@@ -5,6 +5,8 @@ open Lwt.Infix
 open EzAPI
 open EzAPI.TYPES
 
+(* Absolute trash ... Impossible to run any request ... *)
+
 let api_port = ref 8080
 let user1_login = "test_user60"
 let user1_password = "dummydedada1234!"
@@ -130,8 +132,7 @@ let error test n =
 let basic api =
   begin_request ();
   print_endline "no lwt basic ";
-  EzRequest.ANY.get0 (* EzReq_lwt.get0 *)
-    ~msg:"simplest req possible" api Services.version
+  EzRequest.ANY.get0 ~msg:"simplest req possible" api Services.version
     ~error:(error "even on the dummiest") (function
     | Ok r ->
         Printf.eprintf "Result for Simple req : %s\n%!"
@@ -145,33 +146,33 @@ let basic api =
 
 let base_req arg api =
   print_endline "sending req ==> base req";
-  EzRequest_lwt.ANY.post0 ~msg:"trying simple req" ~input:arg api
-    Services.version_test_json_body
-  >>= (* ~error:(error "base_req")  *)
-  function
+  EzReq_lwt.post0 ~msg:"trying simple req" ~input:arg ~url_encode:false
+    ~params:[] ~headers:[] api Services.version_test_json_body
+  >>= function
+  | Error err ->
+      print_endline "bad error";
+      (* Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e); *)
+      handle_error err
+      (* Lwt.return_unit *)
   | Ok e ->
       (* print_endline "ok got res"; *)
       Printf.eprintf "getting db version %s\n%!"
         (Utils.version_test_to_string e);
-      (* handle_response e  *)
-      Lwt.return_unit
-  | Error e ->
-      print_endline "bad error";
-      (* Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e); *)
-      (* handle_error e *)
-      Lwt.return_unit
+      handle_response e
+(* Lwt.return_unit *)
 
 let base_req2 arg api =
   begin_request ();
   print_endline "sending ==> base_req2";
-  EzRequest.ANY.post0 ~msg:"test3" api Services.version_test_json_body
-    ~error:(error "error classic req; no lwt //") ~input:arg (function
+  EzRequest.ANY.post0 ~msg:"Testing simple req with EzRequest.ANY.post0 // "
+    ~error:(error "error classic req; no lwt //")
+    ~input:arg api Services.version_test_json_body (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
+        end_request ()
     | Ok r ->
         Printf.eprintf "Test test3 returned %s\n%!"
           (Utils.version_test_to_string r);
-        end_request ()
-    | Error e ->
-        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
         end_request ())
 
 let () =
@@ -179,18 +180,30 @@ let () =
   let api = Printf.sprintf "http://localhost:%d" !api_port in
   print_endline ("sending req 0 to " ^ api);
   let api = BASE api in
-  let requests =
-       [ (* base_req2 { basic = "okok" }; base_req2 { basic = "okok" } *) basic; ]
+
+  (* let requests =
+       [ base_req2 { basic = "okok" }; base_req2 { basic = "okok" }; basic; ]
      in
      List.iter (fun test -> test api) requests;
      if !nrequests > 0 then (
        waiting := true;
-       EzLwtSys.run (fun () -> waiter));
-  (* Lwt.async
+       EzLwtSys.run (fun () -> waiter)); *)
+  Lwt.async
   @@ send_generic_request
-       ~request:(fun () -> basic api)
+       ~request:(fun () -> base_req { basic = "okok" } api)
        ~callback:(fun res ->
          print_endline (Utils.version_test_to_string res);
-         Lwt.return_unit); *)
-
-  Lwt.async @@ fun () -> base_req { basic = "okok" } api
+         Lwt.return_unit)
+       ~error:(fun err ->
+         match err with
+         | Unknown ->
+             print_endline "this is an Unknown error";
+             Lwt.return_unit
+         | Invalid_request ->
+             print_endline "invalid request";
+             Lwt.return_unit
+         | No_sources_config ->
+             print_endline "no sources config";
+             Lwt.return_unit);
+  let _ = base_req { basic = "okok" } api in
+  ()
