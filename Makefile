@@ -1,4 +1,4 @@
-PROJECT_NAME:=skeleton
+PROJECT_NAME:=ProofBox_Client
 DATABASE:=skeleton
 WEB_HOST:=http://localhost:8888
 API_HOST:=http://localhost:8080
@@ -30,10 +30,12 @@ build: db-update
 
 website: config/info.json
 	@mkdir -p www
-	@cp -f _build/default/src/ui/main_ui.bc.js www/$(PROJECT_NAME)-ui.js
 	@rsync -ar static/* www
 	@cp config/info.json www
 	@sed -i 's/%{project_name}/$(PROJECT_NAME)/g' www/index.html
+
+run-reqs:
+	./_build/default/src/reqs/reqs.exe
 
 api-server: _build/default/src/api/api_server.exe
 	@mkdir -p bin
