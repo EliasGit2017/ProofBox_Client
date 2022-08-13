@@ -102,6 +102,34 @@ let user_test_james =
 
 let default_users_list = [ user_test1; user_test2; user_test3 ]
 
+
+let jobs = [
+  {
+      job_client = "ocamlpro";
+      job_ref_tag = 1;
+      order_ts = "2022-08-10 18:24:22";
+      path_to_f = "root";
+      priority = 100;
+      status = "scheduled"
+  };
+  {
+      job_client = "ocamlpro";
+      job_ref_tag = 2;
+      order_ts = "2022-08-10 18:24:22";
+      path_to_f = "root";
+      priority = 200;
+      status = "scheduled"
+  };
+  {
+      job_client = "ocamlpro";
+      job_ref_tag = 3;
+      order_ts = "2022-08-10 18:24:22";
+      path_to_f = "root";
+      priority = 300;
+      status = "scheduled"
+  }
+]
+
 (** Default error handler *)
 let default_error_handler err =
   (match err with
@@ -131,7 +159,6 @@ let error test n =
 
 let basic api =
   begin_request ();
-  print_endline "no lwt basic ";
   EzRequest.ANY.get0 ~msg:"simplest req possible" api Services.version
     ~error:(error "even on the dummiest") (function
     | Ok r ->
@@ -153,7 +180,7 @@ let base_req arg api =
       print_endline "bad error";
       (* Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e); *)
       handle_error err
-      (* Lwt.return_unit *)
+  (* Lwt.return_unit *)
   | Ok e ->
       (* print_endline "ok got res"; *)
       Printf.eprintf "getting db version %s\n%!"
@@ -171,39 +198,59 @@ let base_req2 arg api =
         Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
         end_request ()
     | Ok r ->
-        Printf.eprintf "Test test3 returned %s\n%!"
+        Printf.eprintf "Test base_req2 returned ==> %s\n%!"
           (Utils.version_test_to_string r);
+        end_request ())
+
+let get_jobs arg api =
+  begin_request ();
+  EzRequest.ANY.post0 ~msg:"getting jobs from user : "
+    ~error:(error "Unable to get jobs |get_jobs| request")
+    ~input:arg api Services.sr_job_desc_from_user (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
+        end_request ()
+    | Ok r ->
+        Printf.eprintf "Jobs : %s\n%!" (Utils.job_list_to_string r);
         end_request ())
 
 let () =
   Printexc.record_backtrace true;
+  EzCohttp.init ();
   let api = Printf.sprintf "http://localhost:%d" !api_port in
   print_endline ("sending req 0 to " ^ api);
   let api = BASE api in
 
-  (* let requests =
-       [ base_req2 { basic = "okok" }; base_req2 { basic = "okok" }; basic; ]
-     in
-     List.iter (fun test -> test api) requests;
-     if !nrequests > 0 then (
-       waiting := true;
-       EzLwtSys.run (fun () -> waiter)); *)
-  Lwt.async
-  @@ send_generic_request
-       ~request:(fun () -> base_req { basic = "okok" } api)
-       ~callback:(fun res ->
-         print_endline (Utils.version_test_to_string res);
-         Lwt.return_unit)
-       ~error:(fun err ->
-         match err with
-         | Unknown ->
-             print_endline "this is an Unknown error";
-             Lwt.return_unit
-         | Invalid_request ->
-             print_endline "invalid request";
-             Lwt.return_unit
-         | No_sources_config ->
-             print_endline "no sources config";
-             Lwt.return_unit);
-  let _ = base_req { basic = "okok" } api in
-  ()
+  let requests =
+    [
+      base_req2 { basic = "okok" };
+      base_req2 { basic = "okok" };
+      basic;
+      get_jobs { job_client_req = "ocamlpro" };
+    ]
+  in
+  List.iter (fun test -> test api) requests;
+  if !nrequests > 0 then (
+    waiting := true;
+    EzLwtSys.run (fun () -> waiter));
+  print_endline (Printf.sprintf "\n %s" (Utils.job_list_to_string jobs))
+
+(* Lwt.async
+   @@ send_generic_request
+     ~request:(fun () -> base_req { basic = "okok" } api)
+     ~callback:(fun res ->
+       print_endline (Utils.version_test_to_string res);
+       Lwt.return_unit)
+     ~error:(fun err ->
+       match err with
+       | Unknown ->
+           print_endline "this is an Unknown error";
+           Lwt.return_unit
+       | Invalid_request ->
+           print_endline "invalid request";
+           Lwt.return_unit
+       | No_sources_config ->
+           print_endline "no sources config";
+           Lwt.return_unit);
+   let _ = base_req { basic = "okok" } api in
+   () *)

@@ -34,4 +34,5 @@ let server services =
   )
 
 let () =
+  EzCohttp.init ();
   server Api.services

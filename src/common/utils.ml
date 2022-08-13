@@ -1,7 +1,6 @@
 open Data_types
 open Str
 
-
 (* Conversion & data printing : ( *_to_string, *_of_string, etc) *)
 
 (** [to_result str ~convf] encapsulates application of [convf] on [str] within [result] type *)
@@ -25,7 +24,7 @@ let version_test_of_string str =
 (** Create string describing [Data_types.version] with '+' as separator
     (to genralize) *)
 let version_test_to_string { v_db; v_db_version } =
-  Printf.sprintf "%s+%d" v_db v_db_version
+  Printf.sprintf "{v_db = %s ; v_db_version = %d}" v_db v_db_version
 
 (** Create string describing [Data_types.user_description] .
     Here for debugging/verbose purposes only. *)
@@ -38,6 +37,19 @@ let users_to_string { username; email; password; user_desc; first_login_date } =
      first_login_date = %s\n"
     username email password user_desc first_login_date
 
+(** [Data_types.jobs] to string *)
+let job_list_to_string job_l =
+  let res = ref "" in
+  List.iter
+    (fun { job_client; job_ref_tag; order_ts; path_to_f; priority; status } ->
+      res := !res
+      ^ (Printf.sprintf
+          "{ job_client = %s;\njob_ref_tag = %d;\norder_ts = %s;\npath_to_f = %s;\n\
+           priority = %d;\nstatus = %s }\n"
+          job_client job_ref_tag order_ts path_to_f priority status))
+    job_l;
+    !res
+
 (* Utilities *)
 
 (* Check regex patterns ... => *)
@@ -45,7 +57,9 @@ let users_to_string { username; email; password; user_desc; first_login_date } =
 (** Regex check on email : pattern identical to domain attempt in
     [db/versions.ml] *)
 let check_email_validity email =
-  let right_email = Str.regexp {|^([a-zA-Z0-9_-.]+)@([a-zA-Z0-9_-.]+)\.([a-zA-Z]{2,5})$|} in
+  let right_email =
+    Str.regexp {|^([a-zA-Z0-9_-.]+)@([a-zA-Z0-9_-.]+)\.([a-zA-Z]{2,5})$|}
+  in
   Str.string_match right_email email 0
 
 (** Regex check on password rules :
@@ -55,7 +69,8 @@ let check_email_validity email =
     At least one special character [\[*.!@#$%^&(){}[]:;<>,.?/~_+-=|\]]
     At least 8 characters in length, but no more than 32.*)
 let check_password_validity password =
-  let right_password = Str.regexp {|^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{8,30}$|} in
+  let right_password =
+    Str.regexp
+      {|^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{8,30}$|}
+  in
   Str.string_match right_password password 0
-
-
