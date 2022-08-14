@@ -39,16 +39,16 @@ let users_to_string { username; email; password; user_desc; first_login_date } =
 
 (** [Data_types.jobs] to string *)
 let job_list_to_string job_l =
-  let res = ref "" in
-  List.iter
-    (fun { job_client; job_ref_tag; order_ts; path_to_f; priority; status } ->
-      res := !res
-      ^ (Printf.sprintf
-          "{ job_client = %s;\njob_ref_tag = %d;\norder_ts = %s;\npath_to_f = %s;\n\
-           priority = %d;\nstatus = %s }\n"
-          job_client job_ref_tag order_ts path_to_f priority status))
-    job_l;
-    !res
+  List.fold_left
+    (fun res { job_client; job_ref_tag; order_ts; path_to_f; priority; status } ->
+      res
+      ^ Printf.sprintf
+          "{ job_client = %s; job_ref_tag = %d; order_ts = %s; path_to_f =%s ; \
+           priority = %d; status = %s }\n"
+          job_client job_ref_tag order_ts path_to_f priority status)
+    "" job_l
+
+(* List.fold_left ( ^ ) "" tmp_list *)
 
 (* Utilities *)
 
