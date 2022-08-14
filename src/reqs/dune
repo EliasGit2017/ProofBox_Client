@@ -1,10 +1,15 @@
+(library
+ (name client_utils)
+ (modules requests_input)
+ (libraries data_common))
+
 (executable
  (name reqs)
  (optional)
  (modules reqs)
  (libraries ez_api ez_api.req ez_api.req_lwt ez_api.request ez_api.session_client 
             data_common api_services safepass ez_api.icohttp ez_api.icohttp_lwt
-            ez_api.server ez_api.server_session)
+            ez_api.server ez_api.server_session client_utils)
 (preprocess (pps lwt_ppx)))
 
 (executable
