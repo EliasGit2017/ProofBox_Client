@@ -1,7 +1,7 @@
 (lang dune 2.4)
 (name ez_pb_client)
 
-(source (uri ))
+(source (uri "https://github.com/EliasGit2017/ProofBox_Client.git"))
 (license MIT)
 (authors "Elias Bendjaballah")
 (maintainers "elias.bendjaballah@gmail.com")
@@ -9,7 +9,7 @@
 (bug_reports https://github.com/EliasGit2017/ProofBox_Client/issues)
 
 (package
- (name skeleton)
+ (name ez_pb_client)
  (synopsis "Client for ProofBox API REST")
  (depends
   (vue-jsoo (= 0.2))

@@ -48,28 +48,23 @@ let job_list_to_string job_l =
           job_client job_ref_tag order_ts path_to_f priority status)
     "" job_l
 
-
-(* Utilities *)
-
-(* Check regex patterns ... => *)
+(* ************************************************************************* *)
 
 (** Regex check on email : pattern identical to domain attempt in
     [db/versions.ml] *)
 let check_email_validity email =
-  let right_email =
-    Str.regexp "\\([^<>(),; \t]+@[^<>(),; \t]+\\)$"
-  in
+  let right_email = Str.regexp "\\([^<>(),; \t]+@[^<>(),; \t]+\\)$" in
   Str.string_match right_email email 0
 
-(** Regex check on password rules :
+(** Regex check on password rules : (!! TO DO (broke regex))
     At least one digit [0-9]
     At least one lowercase character [a-z]
     At least one uppercase character [A-Z]
-    At least one special character [\[*.!@#$%^&(){}[]:;<>,.?/~_+-=|\]]
+    ** At least one special character [\[*.!@#$%^&(){}[]:;<>,.?/~_+-=|\]]
     At least 8 characters in length, but no more than 32.*)
 let check_password_validity password =
   let right_password =
-    Str.regexp
-      "^(?=.*?[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$"
+    Str.regexp {|^\(.{0,7}\|[^0-9]*\|[^A-Z]*\|[^a-z]*\|[a-zA-Z0-9]*\)$|}
   in
-  Str.string_match right_password password 0
+  not @@ Str.string_match right_password password 0
+

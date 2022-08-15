@@ -35,7 +35,7 @@ let basic api =
     ~error:(error "even on the dummiest") (function
     | Ok r ->
         Printf.eprintf "Result for Simple req : %s\n%!"
-          (Utils.version_test_to_string r);
+          (version_test_to_string r);
         (* handle_response r *)
         end_request ()
     | Error e ->
@@ -55,7 +55,7 @@ let base_req2 arg api =
         end_request ()
     | Ok r ->
         Printf.eprintf "Test base_req2 returned ==> %s\n%!"
-          (Utils.version_test_to_string r);
+          (version_test_to_string r);
         end_request ())
 
 let get_jobs arg api =
@@ -67,7 +67,7 @@ let get_jobs arg api =
         Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
         end_request ()
     | Ok r ->
-        Printf.eprintf "Jobs : %s\n%!" (Utils.job_list_to_string r);
+        Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r);
         end_request ())
 
 let get_specific_job arg api =
@@ -79,7 +79,7 @@ let get_specific_job arg api =
         Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
         end_request ()
     | Ok r ->
-        Printf.eprintf "Job : %s\n%!" (Utils.job_list_to_string r);
+        Printf.eprintf "Job : %s\n%!" (job_list_to_string r);
         end_request ())
 
 let () =
@@ -104,5 +104,5 @@ let () =
     EzLwtSys.run (fun () -> waiter)); *)
   print_endline (string_of_bool (check_password_validity "Ocaml11!!djed"));
   print_endline (string_of_bool (check_email_validity "OccAAppmmamlpro@gmail.com"))
-  (* print_endline (Printf.sprintf "\n %s" (Utils.job_list_to_string jobs)) *)
+  
 
