@@ -1,7 +1,7 @@
 (lang dune 2.4)
 (name ez_pb_client)
 
-(source (uri https://github.com/EliasGit2017/ProofBox_Client.git))
+(source (uri ))
 (license MIT)
 (authors "Elias Bendjaballah")
 (maintainers "elias.bendjaballah@gmail.com")
