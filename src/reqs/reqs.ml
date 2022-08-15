@@ -84,7 +84,7 @@ let get_specific_job arg api =
 
 let () =
   Printexc.record_backtrace true;
-  EzCohttp.init ();
+  (* EzCohttp.init ();
   let api = Printf.sprintf "http://localhost:%d" !api_port in
   print_endline ("sending req 0 to " ^ api);
   let api = BASE api in
@@ -101,6 +101,8 @@ let () =
   List.iter (fun test -> test api) requests;
   if !nrequests > 0 then (
     waiting := true;
-    EzLwtSys.run (fun () -> waiter));
+    EzLwtSys.run (fun () -> waiter)); *)
+  print_endline (string_of_bool (check_password_validity "Ocaml11!!djed"));
+  print_endline (string_of_bool (check_email_validity "OccAAppmmamlpro@gmail.com"))
   (* print_endline (Printf.sprintf "\n %s" (Utils.job_list_to_string jobs)) *)
 

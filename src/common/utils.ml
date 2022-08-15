@@ -48,7 +48,6 @@ let job_list_to_string job_l =
           job_client job_ref_tag order_ts path_to_f priority status)
     "" job_l
 
-(* List.fold_left ( ^ ) "" tmp_list *)
 
 (* Utilities *)
 
@@ -58,7 +57,7 @@ let job_list_to_string job_l =
     [db/versions.ml] *)
 let check_email_validity email =
   let right_email =
-    Str.regexp {|^([a-zA-Z0-9_-.]+)@([a-zA-Z0-9_-.]+)\.([a-zA-Z]{2,5})$|}
+    Str.regexp "\\([^<>(),; \t]+@[^<>(),; \t]+\\)$"
   in
   Str.string_match right_email email 0
 
@@ -71,6 +70,6 @@ let check_email_validity email =
 let check_password_validity password =
   let right_password =
     Str.regexp
-      {|^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{8,30}$|}
+      "^(?=.*?[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$"
   in
   Str.string_match right_password password 0

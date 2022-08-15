@@ -13,8 +13,6 @@ let body =
   Printf.printf "Body of length: %d\n" (String.length body);
   body
 
-(* let post_body =
-  Client.post (Uri.of_string "http://localhost:8080/retrieve_job_description_from_user") *)
 
 let () =
   let body = Lwt_main.run body in

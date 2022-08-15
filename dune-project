@@ -1,22 +1,25 @@
 (lang dune 2.4)
-(name skeleton)
+(name ez_pb_client)
 
-(source (uri git://gitlab.com/o-labs/skeleton))
+(source (uri https://github.com/EliasGit2017/ProofBox_Client.git))
 (license MIT)
-(authors "John Doe")
-(maintainers "john.doe@origin-labs.com")
-(homepage https://gitlab.com/o-labs/skeleton)
-(bug_reports https://gitlab.com/o-labs/skeleton/-/issues)
+(authors "Elias Bendjaballah")
+(maintainers "elias.bendjaballah@gmail.com")
+(homepage https://github.com/EliasGit2017/ProofBox_Client.git)
+(bug_reports https://github.com/EliasGit2017/ProofBox_Client/issues)
 
 (package
  (name skeleton)
- (synopsis "Skeleton of website with API REST")
+ (synopsis "Client for ProofBox API REST")
  (depends
-  vue-jsoo
-  ez_api
-  calendar
-  geoip
-  cohttp-lwt-unix
-  re
-  pgocaml_ppx
-  ez_pgocaml))
+  (vue-jsoo (= 0.2))
+  (ez_api (= 1.2.0))
+  (calendar (= 2.04))
+  (geoip (= 0.0.3))
+  (cohttp-lwt-unix (= 5.0.0))
+  (re (= 1.10.4))
+  (ppx_deriving_encoding ( >= 0.3.0 ))
+  (configuration (= 0.4.1))
+  (cmdliner (= 1.1.1))
+  (safepass (= 3.1))
+  ocamlformat))
