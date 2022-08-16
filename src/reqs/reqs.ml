@@ -103,7 +103,7 @@ let test_session arg api =
     | Ok None ->
         Session.login api ~login:"test_user60"
           ~password:
-            "$2y$08$ETVsicgQfLGacvwXIXqOQO0u1RfzF1qZ0vWAglbzFpehU2xKDenUe"
+            "$2y$08$i2c6b9CeUpLJQs8ZGqmrie399MFdX2w17KPXqiXO4cIY6fnEO1CUS"
           (* TO DEFINE *) (function
           | Error _ ->
               Printf.eprintf "Error in Login \n%!";
@@ -164,14 +164,15 @@ let () =
          basic;
          get_jobs { job_client_req = "ocamlpro" };
          get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
-      test_session { basic = "okok" };
-      test_signup Client_utils.Requests_input.user_test_marla;
+      (* test_session { basic = "okok" }; *)
+      test_signup Client_utils.Requests_input.fault_email_test_james;
+      test_signup Client_utils.Requests_input.fault_password_test_james;
     ]
   in
   List.iter (fun test -> test api) requests;
   if !nrequests > 0 then (
     waiting := true;
     EzLwtSys.run (fun () -> waiter));
-  print_endline (string_of_bool (check_password_validity "Ocaml11!!djed"));
+  print_endline (string_of_bool (check_password_validity "examPle!!//*dc,a22225"));
   print_endline
-    (string_of_bool (check_email_validity "OccAAppmmamlpro@gmail.com"))
+    (string_of_bool (check_email_validity "james.deanddeafgmail.com"))

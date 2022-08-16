@@ -81,4 +81,3 @@ let check_password_validity password =
     Str.regexp {|^\(.{0,7}\|[^0-9]*\|[^A-Z]*\|[^a-z]*\|[a-zA-Z0-9]*\)$|}
   in
   not @@ Str.string_match right_password password 0
-

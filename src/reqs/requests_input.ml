@@ -66,7 +66,7 @@ let fault_email_test_james =
   {
     username = "james";
     email = "james.deanddeafgmail.com";
-    password = "examPlePass1!";
+    password = "examPle!!//*dc,a22225";
     user_desc = "test user 1";
     first_login_date = "Irrelevant";
   }
