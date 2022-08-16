@@ -48,6 +48,20 @@ let job_list_to_string job_l =
           job_client job_ref_tag order_ts path_to_f priority status)
     "" job_l
 
+let default_server_response_from_string _comm_des _client_infos _infos
+    error_desc =
+  {
+    comm_desc = _comm_des;
+    client_infos = _client_infos;
+    infos = _infos;
+    error_desc;
+  }
+
+let default_server_response_to_string elem =
+  Printf.sprintf
+    "comm_desc = %s; client_infos = %s; infos = %s; error_desc = %s"
+    elem.comm_desc elem.client_infos elem.infos elem.error_desc
+
 (* ************************************************************************* *)
 
 (** Regex check on email : pattern identical to domain attempt in
@@ -56,7 +70,7 @@ let check_email_validity email =
   let right_email = Str.regexp "\\([^<>(),; \t]+@[^<>(),; \t]+\\)$" in
   Str.string_match right_email email 0
 
-(** Regex check on password rules : (!! TO DO (broke regex))
+(** Regex check on password rules :
     At least one digit [0-9]
     At least one lowercase character [a-z]
     At least one uppercase character [A-Z]

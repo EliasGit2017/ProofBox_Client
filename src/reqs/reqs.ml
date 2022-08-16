@@ -119,7 +119,7 @@ let test_session arg api =
                 api Services.test_session ~error:(error "test session")
                 ~input:arg
                 ~headers:
-                  (("X-Another-Header2:", "x2")
+                  (("X-Auth-Header2:", "Session-Cookie/Token")
                   :: Session.auth_headers ~token:u.auth_token) "arg-of-post1"
                 (function
                 | Ok r ->
@@ -137,6 +137,19 @@ let test_session arg api =
                     @@ Printexc.to_string (proofbox_api_error e);
                     end_request ())))
 
+let test_signup arg api =
+  begin_request ();
+  EzRequest.ANY.post0 ~msg:"Testing signup service : "
+    ~error:(error "Unable to Signup User : [test_signup]")
+    ~input:arg api Services.sign_up_new_user (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e);
+        end_request ()
+    | Ok r ->
+        Printf.eprintf "\nDefault response ==> %s\n\n%!"
+          (Utils.default_server_response_to_string r);
+        end_request ())
+
 let () =
   Printexc.record_backtrace true;
   EzCohttp.init ();
@@ -152,6 +165,7 @@ let () =
          get_jobs { job_client_req = "ocamlpro" };
          get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
       test_session { basic = "okok" };
+      test_signup Client_utils.Requests_input.user_test_marla;
     ]
   in
   List.iter (fun test -> test api) requests;

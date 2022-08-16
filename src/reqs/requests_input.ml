@@ -62,6 +62,24 @@ let user_test_james =
     first_login_date = "2022-08-07 14:45:52.523274";
   }
 
+let fault_email_test_james =
+  {
+    username = "james";
+    email = "james.deanddeafgmail.com";
+    password = "examPlePass1!";
+    user_desc = "test user 1";
+    first_login_date = "Irrelevant";
+  }
+
+let fault_password_test_james =
+  {
+    username = "james";
+    email = "james.dean@gmail.com";
+    password = "olvnzv";
+    user_desc = "test user 1";
+    first_login_date = "2022-08-07 14:45:52.523274";
+  }
+
 let default_users_list = [ user_test1; user_test2; user_test3 ]
 
 let jobs =

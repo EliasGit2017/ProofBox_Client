@@ -71,3 +71,11 @@ type user_description = {
 }
 
 type nonrec all_users = user_description list
+
+type general_comm = {
+  comm_desc : string;
+  client_infos : string;
+  infos : string;
+  error_desc : string;
+}
+
