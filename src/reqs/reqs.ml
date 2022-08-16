@@ -23,7 +23,18 @@ let end_request () =
   if !waiting && !nrequests = 0 then Lwt.wakeup finalizer ()
 (* // *)
 
+module SessionArg = struct
+  type user_id = string
+  type user_info = Data_types.user_info
 
+  let user_id_encoding = Json_encoding.string
+  let user_info_encoding = Encoding.user_info
+  let rpc_path = []
+  let token_kind = `CSRF "X-Csrf-Token" (* `Cookie "EZSESSION" *)
+end
+
+module Session = EzSessionClient.Make (SessionArg)
+open EzAPI.TYPES
 
 let error test n =
   Printf.eprintf "Error: request %s returned code %d\n%!" test n;
@@ -42,7 +53,6 @@ let basic api =
         Printf.eprintf "%s\n%!" @@ "very bad error even in basic req";
         (* handle_error e *)
         end_request ())
-
 
 let base_req2 arg api =
   begin_request ();
@@ -82,27 +92,72 @@ let get_specific_job arg api =
         Printf.eprintf "Job : %s\n%!" (job_list_to_string r);
         end_request ())
 
+let test_session arg api =
+  let open EzSession.TYPES in
+  begin_request ();
+  Session.connect api (function
+    | Error _ ->
+        Printf.eprintf "Error in Connect \n%!";
+        exit 2
+    | Ok (Some _u) -> assert false
+    | Ok None ->
+        Session.login api ~login:"test_user60"
+          ~password:
+            "$2y$08$ETVsicgQfLGacvwXIXqOQO0u1RfzF1qZ0vWAglbzFpehU2xKDenUe"
+          (* TO DEFINE *) (function
+          | Error _ ->
+              Printf.eprintf "Error in Login \n%!";
+              exit 2
+          | Ok u ->
+              Printf.eprintf
+                "auth_login = %s; auth_token = %s; auth_user_id = %s; \
+                 auth_user_info = %s\n\
+                 %!"
+                u.auth_login u.auth_token u.auth_user_id u.auth_user_info;
+              (* Print login info here *)
+              EzRequest.ANY.post1 ~msg:"testing service through connect / login"
+                api Services.test_session ~error:(error "test session")
+                ~input:arg
+                ~headers:
+                  (("X-Another-Header2:", "x2")
+                  :: Session.auth_headers ~token:u.auth_token) "arg-of-post1"
+                (function
+                | Ok r ->
+                    Printf.eprintf "Test test4 returned %s\n%!"
+                      (version_test_to_string r);
+                    Session.logout api ~token:u.auth_token (function
+                      | Error _ ->
+                          Printf.eprintf "Error in logout\n%!";
+                          exit 2
+                      | Ok bool ->
+                          Printf.eprintf "logout OK %b\n%!" bool;
+                          end_request ())
+                | Error e ->
+                    Printf.eprintf "%s\n%!"
+                    @@ Printexc.to_string (proofbox_api_error e);
+                    end_request ())))
+
 let () =
   Printexc.record_backtrace true;
-  (* EzCohttp.init ();
+  EzCohttp.init ();
   let api = Printf.sprintf "http://localhost:%d" !api_port in
-  print_endline ("sending req 0 to " ^ api);
+  print_endline ("sending reqs to " ^ api);
   let api = BASE api in
 
   let requests =
     [
-      base_req2 { basic = "okok" };
-      base_req2 { basic = "okok" };
-      basic;
-      get_jobs { job_client_req = "ocamlpro" };
-      get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1};
+      (* base_req2 { basic = "okok" };
+         base_req2 { basic = "okok" };
+         basic;
+         get_jobs { job_client_req = "ocamlpro" };
+         get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
+      test_session { basic = "okok" };
     ]
   in
   List.iter (fun test -> test api) requests;
   if !nrequests > 0 then (
     waiting := true;
-    EzLwtSys.run (fun () -> waiter)); *)
+    EzLwtSys.run (fun () -> waiter));
   print_endline (string_of_bool (check_password_validity "Ocaml11!!djed"));
-  print_endline (string_of_bool (check_email_validity "OccAAppmmamlpro@gmail.com"))
-  
-
+  print_endline
+    (string_of_bool (check_email_validity "OccAAppmmamlpro@gmail.com"))
