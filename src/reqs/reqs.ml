@@ -104,7 +104,7 @@ let test_session arg api =
         Session.login api ~login:"test_user60"
           ~password:
             "$2y$08$i2c6b9CeUpLJQs8ZGqmrie399MFdX2w17KPXqiXO4cIY6fnEO1CUS"
-          (* TO DEFINE *) (function
+          (* TO DEFINE simplify this *) (function
           | Error _ ->
               Printf.eprintf "Error in Login \n%!";
               exit 2

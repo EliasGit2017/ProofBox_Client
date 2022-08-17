@@ -1,0 +1,9 @@
+(library
+ (name )
+ (public_name )
+ (libraries ))
+
+ (executable
+  (name )
+  (public_name )
+  (libraries ))
