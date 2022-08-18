@@ -22,4 +22,6 @@
   (configuration (= 0.4.1))
   (cmdliner (= 1.1.1))
   (safepass (= 3.1))
-  ocamlformat))
+  (ocamlformat (= 0.24.1))
+  (otoml (= 1.0.1))
+  (camlzip (= 1.11))))
