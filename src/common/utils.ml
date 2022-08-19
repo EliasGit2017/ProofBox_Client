@@ -81,3 +81,13 @@ let check_password_validity password =
     Str.regexp {|^\(.{0,7}\|[^0-9]*\|[^A-Z]*\|[^a-z]*\|[a-zA-Z0-9]*\)$|}
   in
   not @@ Str.string_match right_password password 0
+
+(* ************************************************************************* *)
+
+(* Error printing *)
+
+let err_toml_print e =
+  match e with
+  | Bad_toml_format -> "Toml_error.bad_toml_format"
+  | Toml_not_found -> "Toml_error.toml_not_found"
+  | Unknown -> "Toml.error.unknown"

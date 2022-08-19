@@ -79,3 +79,16 @@ type general_comm = {
   error_desc : string;
 }
 
+type toml_error_type =
+| Bad_toml_format
+| Toml_not_found
+| Unknown
+
+exception Toml_error of toml_error_type
+
+let toml_error typ = Toml_error typ
+
+let toml_error_type err =
+  match  err with
+  | Toml_error typ -> typ
+  | _ -> Unknown

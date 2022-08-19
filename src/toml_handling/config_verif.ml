@@ -1,5 +1,7 @@
 open Otoml
 open Read_write_toml.Utils
+open Data_types
+open Utils
 
 let baseTOML_dir = "/home/elias/OCP/PROOFBOX_TestJobs/job_example1/"
 
@@ -36,7 +38,7 @@ let retrieve_toml_values
     htab_toml_values
   with Type_error _ | Key_error _ ->
     print_endline @@ Printf.sprintf "Badly formatted TOML at : %s" get_main_toml;
-    Hashtbl.create 0
+    raise (Toml_error Bad_toml_format)
 
 let () =
   Printexc.record_backtrace true;
@@ -55,18 +57,22 @@ let () =
 
   print_endline "=> list files ==> :";
   launch_process path_to_toml;
+
   let jdptof = get_str test [ "job_description"; "path_to_client_repo" ] in
   (* stringlist_printer
   @@ get_all_files_w_ext_smts
        "/home/elias/OCP/PROOFBOX_TestJobs/job_example1/ALIA/piVC"; *)
   stringlist_printer @@ dir_contents jdptof;
-  print_endline @@ Printf.sprintf "\nUnix.getcwd : %s" (testunix ());
+  
+  print_endline @@ Printf.sprintf "Unix.getcwd : %s" (testunix ());
   print_endline "==> Main TOML : =>";
   print_endline get_main_toml;
-  if Hashtbl.length retrieve_toml_values = 0 then
-    print_endline "badly formatted toml"
-  else
-    Hashtbl.iter
+  try let res_table = retrieve_toml_values in
+  Hashtbl.iter
       (fun x y -> print_endline @@ Printf.sprintf "%s %s" x y)
-      retrieve_toml_values
-(* print_endline @@ Printf.sprintf "%d" (List.length @@ get_all_files_w_ext baseTOML_dir ".toml") *)
+      res_table
+  with
+    | Toml_error e -> print_endline @@ err_toml_print e
+(* print_endline "bad toml format"
+   | Toml_not_found ->  @@ toml not found"
+   | Unknown _ unknown"sprintf "%d" (List.length @@ get_all_files_w_ext baseTOML_dir ".toml") *)

@@ -2,7 +2,7 @@ open Otoml
 open Str
 
 (* Otoml : Utils to get / set values and acces toml files simply &
-   Wrappers over some functions *)
+   Wrappers over some functions : https://github.com/dmbaturin/otoml*)
 
 let title_toml = [ "title" ]
 let owner_username = [ "owner"; "username" ]
@@ -123,13 +123,6 @@ let dir_contents dir =
   let rec loop result = function
     | f :: fs when Sys.is_directory f ->
         Sys.readdir f |> Array.to_list
-        (* |> List.filter (fun x ->
-               let x_bis = List.hd (List.rev (String.split_on_char '/' x)) in
-               print_endline x_bis;
-               Filename.extension x_bis = ".smt2") *)
-        (* |> List.filter (fun x -> Str.string_match (Str.regexp {|.*\.smt2|}) x 0) *)
-        (* |> List.filter (fun x -> Filename.extension x = ".smt2") *)
-        (* exploration : here as (brouillon) *)
         |> List.map (Filename.concat f)
         |> List.append fs |> loop result
     | f :: fs -> loop (f :: result) fs
@@ -154,7 +147,6 @@ let launch_process base_dir =
   stringlist_printer @@ chan_to_stringlist ocaml_stdout;
   stringlist_printer @@ chan_to_stringlist ocaml_stderr;
 
-  print_endline " => printing my list";
   stringlist_printer !l_res;
 
   let stat = Unix.close_process_full p in
