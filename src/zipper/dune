@@ -1,0 +1,4 @@
+(executable
+ (name main_zipper)
+ (modules main_zipper)
+ (libraries camlzip))

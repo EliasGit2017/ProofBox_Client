@@ -14,9 +14,7 @@ let get_main_toml =
   else baseTOML_dir ^ List.hd res
 (* get absolute path through Sys ? *)
 
-let retrieve_toml_values
-    (* ~file *)
-    (* : Otoml.t *) =
+let retrieve_toml_values =
   let parsed_toml = Otoml.Parser.from_file get_main_toml in
   let htab_toml_values = Hashtbl.create 10 in
   try
@@ -40,39 +38,60 @@ let retrieve_toml_values
     print_endline @@ Printf.sprintf "Badly formatted TOML at : %s" get_main_toml;
     raise (Toml_error Bad_toml_format)
 
+(** Retrieves the list of files [string]s reprensenting : absolute path + filename *)
+let get_files parsed_toml = dir_contents @@ get_jd_path_tof parsed_toml
+
+let zip_bundle path_fn target =
+  let bundle_zip = Gzip.open_out_chan ~level:7 path_fn in
+  Gzip.output bundle_zip target 0 (Bytes.length target);
+  Gzip.close_out bundle_zip
+
+let get_bytes fn =
+  let inc = open_in_bin fn in
+  let rec go sofar =
+    match input_byte inc with
+    | b -> go (b :: sofar)
+    | exception End_of_file -> List.rev sofar
+  in
+  let res = go [] in
+  close_in inc;
+  res
+
+(** [write_gzipped_file file_name l s] writes to the file [file_name] 
+    the gzipped contents of string [s]. *)
+let write_gzipped_file (file_name : string) (s : string) : unit =
+  try
+    let n = String.length s in
+    if n > 0 then (
+      let f = Gzip.open_out ~level:7 file_name in
+      Gzip.output_substring f s 0 n;
+      (* Gzip.close_out f *))
+    else
+      (* Zero length string: we write a zero length file. TO DO -> change to not creating file *)
+      let f = open_out file_name in
+      close_out f
+  with Gzip.Error s -> raise (Gzip.Error (s ^ " writing file: " ^ file_name))
+
+let make_zip_bundle dir_name =
+  let target_files = dir_contents dir_name in
+  List.iter
+    (fun e ->
+      let tmp = open_in e in
+      write_gzipped_file e (really_input_string tmp (in_channel_length tmp)))
+    target_files
+
 let () =
   Printexc.record_backtrace true;
-  let test = Otoml.Parser.from_file (path_to_toml ^ "/job.toml") in
-  test
-  |> Otoml.Printer.to_channel ~indent_width:4 ~indent_subtables:true
-       ~collapse_tables:false stdout;
-  print_endline "\n ==> getting access to nested +/- values\n";
+  make_zip_bundle baseTOML_dir
+  (* let all_files = dir_contents baseTOML_dir in
+  let to_comp = open_in (List.hd all_files) in
+  let e = really_input_string to_comp (in_channel_length to_comp) in
+  write_gzipped_file (List.hd all_files ^ ".zip") e *)
 
-  print_endline "=> email : ";
-  Otoml.find test Otoml.get_value [ "owner"; "email" ]
-  |> Otoml.Printer.to_channel stdout;
+(* let test = Otoml.Parser.from_file (path_to_toml ^ "/job.toml") in
+   stringlist_printer @@ dir_contents @@ (test |> get_jd_path_tof) *)
 
-  print_endline "\n=> job_description table : ";
-  get_owner_bio test (* |> Otoml.Printer.to_string *) |> print_endline;
-
-  print_endline "=> list files ==> :";
-  launch_process path_to_toml;
-
-  let jdptof = get_str test [ "job_description"; "path_to_client_repo" ] in
-  (* stringlist_printer
-  @@ get_all_files_w_ext_smts
-       "/home/elias/OCP/PROOFBOX_TestJobs/job_example1/ALIA/piVC"; *)
-  stringlist_printer @@ dir_contents jdptof;
-  
-  print_endline @@ Printf.sprintf "Unix.getcwd : %s" (testunix ());
-  print_endline "==> Main TOML : =>";
-  print_endline get_main_toml;
-  try let res_table = retrieve_toml_values in
-  Hashtbl.iter
-      (fun x y -> print_endline @@ Printf.sprintf "%s %s" x y)
-      res_table
-  with
-    | Toml_error e -> print_endline @@ err_toml_print e
-(* print_endline "bad toml format"
-   | Toml_not_found ->  @@ toml not found"
-   | Unknown _ unknown"sprintf "%d" (List.length @@ get_all_files_w_ext baseTOML_dir ".toml") *)
+(* let write_file path string =
+   let out_gzip = Gzip.open_out path in
+   Gzip.output out_gzip string 0 (String.length string);
+   Gzip.close_out out_gzip *)
