@@ -58,19 +58,37 @@ let get_bytes fn =
   res
 
 (** [write_gzipped_file file_name l s] writes to the file [file_name] 
-    the gzipped contents of string [s]. *)
+    the gzipped contents of string [s]. (Deprecated) *)
 let write_gzipped_file (file_name : string) (s : string) : unit =
   try
     let n = String.length s in
     if n > 0 then (
       let f = Gzip.open_out ~level:7 file_name in
       Gzip.output_substring f s 0 n;
-      (* Gzip.close_out f *))
+      Gzip.close_out f)
     else
       (* Zero length string: we write a zero length file. TO DO -> change to not creating file *)
       let f = open_out file_name in
       close_out f
   with Gzip.Error s -> raise (Gzip.Error (s ^ " writing file: " ^ file_name))
+
+(** [write_gzipped_file file_name l s] writes to the file [file_name] 
+    the gzipped contents of string [s]. *)
+let make_zipbundle_file (dir_name : string) (archive_name : string) : unit
+    =
+  try
+    let target_files = dir_contents dir_name in
+    let main_archive =
+      Zip.open_out ~comment:"Main archive containing target files" archive_name
+    in
+    List.iter (fun e -> Zip.copy_file_to_entry e main_archive e) target_files;
+    Zip.close_out main_archive
+  with Zip.Error _ ->
+    raise
+    @@ Zip.Error
+         ( archive_name,
+           "unspecified filename",
+           " problem when writting files to archive" )
 
 let make_zip_bundle dir_name =
   let target_files = dir_contents dir_name in
@@ -82,11 +100,11 @@ let make_zip_bundle dir_name =
 
 let () =
   Printexc.record_backtrace true;
-  make_zip_bundle baseTOML_dir
-  (* let all_files = dir_contents baseTOML_dir in
-  let to_comp = open_in (List.hd all_files) in
-  let e = really_input_string to_comp (in_channel_length to_comp) in
-  write_gzipped_file (List.hd all_files ^ ".zip") e *)
+  make_zipbundle_file baseTOML_dir "/home/elias/OCP/ez_pb_client/example.zip"
+(* let all_files = dir_contents baseTOML_dir in
+   let to_comp = open_in (List.hd all_files) in
+   let e = really_input_string to_comp (in_channel_length to_comp) in
+   write_gzipped_file (List.hd all_files ^ ".zip") e *)
 
 (* let test = Otoml.Parser.from_file (path_to_toml ^ "/job.toml") in
    stringlist_printer @@ dir_contents @@ (test |> get_jd_path_tof) *)
