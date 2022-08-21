@@ -58,6 +58,7 @@ let path_to_toml = "/home/elias/OCP/ez_proofbox/src/backend_arch"
 let testunix = Unix.getcwd
 let accepted_formats = [ ".smt2"; ".ae" ]
 
+(** Returns a string describing Unix error status code *)
 let stat_code status =
   match status with
   | Unix.WEXITED e -> Printf.sprintf "WEXITED : code = %d" e
@@ -72,6 +73,10 @@ let print_chan channel =
   in
   try loop () with End_of_file -> close_in channel
 
+(** see jane street existing functions :
+    In_channel.read_all "./input.txt"
+    In_channel.read_lines "./input.txt"
+    In_channel.fold_lines *)
 let chan_to_stringlist channel =
   let rec loop acc =
     try loop (input_line channel :: acc) with End_of_file -> List.rev acc
@@ -121,8 +126,13 @@ let dir_contents dir =
   in
   loop [] [ dir ]
 
+(** Remove dir_name from filename *)
 let remove_fn_dir (file_name : string) : string =
   Filename.basename file_name
+
+(** List version of [remove_fn_dir] *)
+let l_remove_fn_dir (file_list : string list) : string list =
+  List.map (fun e -> remove_fn_dir e) file_list
 
 (** Exploration && tests *)
 let launch_process base_dir =
