@@ -72,19 +72,6 @@ let print_chan channel =
   in
   try loop () with End_of_file -> close_in channel
 
-(** Search for no ref version ? *)
-(* let chan_to_stringlist channel =
-   let l_res = ref List.[] in
-   let rec loop () =
-     l_res := input_line channel :: !l_res;
-     loop ()
-   in
-   try loop ()
-   with End_of_file ->
-     (* close_in channel; *)
-     (* Closed by [Unix.close_process_full] *)
-     !l_res *)
-
 let chan_to_stringlist channel =
   let rec loop acc =
     try loop (input_line channel :: acc) with End_of_file -> List.rev acc
@@ -134,6 +121,9 @@ let dir_contents dir =
   in
   loop [] [ dir ]
 
+let remove_fn_dir (file_name : string) : string =
+  Filename.basename file_name
+
 (** Exploration && tests *)
 let launch_process base_dir =
   let ((ocaml_stdout, ocaml_stdin, ocaml_stderr) as p) =
@@ -151,3 +141,65 @@ let launch_process base_dir =
 
   let stat = Unix.close_process_full p in
   print_endline @@ stat_code stat
+
+
+(* camlzip utils & tools *)
+
+let zip_bundle path_fn target =
+  let bundle_zip = Gzip.open_out_chan ~level:7 path_fn in
+  Gzip.output bundle_zip target 0 (Bytes.length target);
+  Gzip.close_out bundle_zip
+
+let get_bytes fn =
+  let inc = open_in_bin fn in
+  let rec go sofar =
+    match input_byte inc with
+    | b -> go (b :: sofar)
+    | exception End_of_file -> List.rev sofar
+  in
+  let res = go [] in
+  close_in inc;
+  res
+
+(** [write_gzipped_file file_name l s] writes to the file [file_name] 
+    the gzipped contents of string [s]. (Deprecated) *)
+let write_gzipped_file (file_name : string) (s : string) : unit =
+  try
+    let n = String.length s in
+    if n > 0 then (
+      let f = Gzip.open_out ~level:7 file_name in
+      Gzip.output_substring f s 0 n;
+      Gzip.close_out f)
+    else
+      (* Zero length string: we write a zero length file. TO DO -> change to not creating file *)
+      let f = open_out file_name in
+      close_out f
+  with Gzip.Error s -> raise (Gzip.Error (s ^ " writing file: " ^ file_name))
+
+(** [make_zipbundle ~keep_dir_struct:false dir_name archive_name] creates 
+    a zip containing the [.smt2] & [.ae] files present in the directory [dir_name]
+    (absolute path). The directory structure is not preserved when [keep_dir_struct]
+    is set to false as all the files are bundled together in the same main zipped directory. *)
+let make_zipbundle (dir_name : string) (archive_name : string)
+    ?(keep_dir_struct = true) : unit =
+  try
+    let target_files = dir_contents dir_name in
+    let main_archive =
+      Zip.open_out ~comment:"Main archive containing target files" archive_name
+    in
+    List.iter
+      (fun e ->
+        if keep_dir_struct then
+          Zip.copy_file_to_entry ~extra:"target_file for smt solver"
+            ~comment:"to be solved" ~level:7 e main_archive (remove_fn_dir e)
+        else
+          Zip.copy_file_to_entry ~extra:"target_file for smt solver"
+            ~comment:"to be solved" ~level:7 e main_archive e)
+      target_files;
+    Zip.close_out main_archive
+  with Zip.Error _ ->
+    raise
+    @@ Zip.Error
+         ( archive_name,
+           "unspecified filename",
+           " problem when writting files to archive" )
