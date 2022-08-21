@@ -191,10 +191,10 @@ let make_zipbundle (dir_name : string) (archive_name : string)
       (fun e ->
         if keep_dir_struct then
           Zip.copy_file_to_entry ~extra:"target_file for smt solver"
-            ~comment:"to be solved" ~level:7 e main_archive (remove_fn_dir e)
+            ~comment:"to be solved" ~level:7 e main_archive e
         else
           Zip.copy_file_to_entry ~extra:"target_file for smt solver"
-            ~comment:"to be solved" ~level:7 e main_archive e)
+            ~comment:"to be solved" ~level:7 e main_archive (remove_fn_dir e))
       target_files;
     Zip.close_out main_archive
   with Zip.Error _ ->
