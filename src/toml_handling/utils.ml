@@ -23,11 +23,11 @@ let get_value_wrap parsed_toml path_toval =
   try Otoml.find parsed_toml Otoml.get_value path_toval with
   | Type_error e ->
       print_endline
-      @@ Printf.sprintf "Otoml.Type_error from get_value_wrap : %s" e;
+      @@ Printf.sprintf "Otoml.Type_error from get_value_wrap : %s" e ;
       Otoml.TomlBoolean false
   | Key_error e ->
       print_endline
-      @@ Printf.sprintf "Otoml.Type_error from get_value_wrap : %s" e;
+      @@ Printf.sprintf "Otoml.Type_error from get_value_wrap : %s" e ;
       Otoml.TomlBoolean false
 
 let get_str parsed_toml path_toval =
@@ -65,29 +65,25 @@ let stat_code status =
   | Unix.WSIGNALED s -> Printf.sprintf "WSIGNALED : code = %d" s
   | Unix.WSTOPPED st -> Printf.sprintf "WSTOPPED : code = %d" st
 
-(** Print channel with [print_endline]  *)
+(** Print channel with [print_endline] *)
 let print_chan channel =
   let rec loop () =
     let () = print_endline (input_line channel) in
-    loop ()
-  in
+    loop () in
   try loop () with End_of_file -> close_in channel
 
-(** see jane street existing functions :
-    In_channel.read_all "./input.txt"
-    In_channel.read_lines "./input.txt"
-    In_channel.fold_lines *)
+(** see jane street existing functions : In_channel.read_all "./input.txt"
+    In_channel.read_lines "./input.txt" In_channel.fold_lines *)
 let chan_to_stringlist channel =
   let rec loop acc =
-    try loop (input_line channel :: acc) with End_of_file -> List.rev acc
-  in
+    try loop (input_line channel :: acc) with End_of_file -> List.rev acc in
   loop []
 
 (** Print string list with [print_endline] for each element *)
 let rec stringlist_printer = function
   | [] -> ()
   | e :: l ->
-      print_endline e;
+      print_endline e ;
       stringlist_printer l
 
 (** Convert string list to string with [sep] as separator *)
@@ -109,8 +105,8 @@ let get_all_files_w_ext wd ext =
   Sys.readdir wd |> Array.to_list
   |> List.filter (fun x -> Filename.extension x = ext)
 
-(** [dir_contents] returns the paths of all regular files ([.smt2] && [.ae]) that are
-  contained in [dir]. Each file is a path starting with [dir].*)
+(** [dir_contents] returns the paths of all regular files ([.smt2] && [.ae])
+    that are contained in [dir]. Each file is a path starting with [dir].*)
 let dir_contents dir =
   let rec loop result = function
     | f :: fs when Sys.is_directory f ->
@@ -122,13 +118,11 @@ let dir_contents dir =
         result
         |> List.filter (fun x ->
                Str.string_match (Str.regexp {|\(.*\.smt2\)\|(.*\.ae)|}) x 0)
-    (* not optimized *)
-  in
+    (* not optimized *) in
   loop [] [ dir ]
 
 (** Remove dir_name from filename *)
-let remove_fn_dir (file_name : string) : string =
-  Filename.basename file_name
+let remove_fn_dir (file_name : string) : string = Filename.basename file_name
 
 (** List version of [remove_fn_dir] *)
 let l_remove_fn_dir (file_list : string list) : string list =
@@ -139,25 +133,23 @@ let launch_process base_dir =
   let ((ocaml_stdout, ocaml_stdin, ocaml_stderr) as p) =
     Unix.open_process_args_full "/usr/bin/ls"
       [| "/usr/bin/ls"; path_to_toml |]
-      (Unix.environment ())
-  in
+      (Unix.environment ()) in
   let l_res = ref [] in
   (* print_endline @@ Printf.sprintf "%d" @@ List.length @@ chan_to_stringlist ocaml_stdout;
      print_endline @@ Printf.sprintf "%d" @@ List.length @@ chan_to_stringlist ocaml_stderr; *)
-  stringlist_printer @@ chan_to_stringlist ocaml_stdout;
-  stringlist_printer @@ chan_to_stringlist ocaml_stderr;
+  stringlist_printer @@ chan_to_stringlist ocaml_stdout ;
+  stringlist_printer @@ chan_to_stringlist ocaml_stderr ;
 
-  stringlist_printer !l_res;
+  stringlist_printer !l_res ;
 
   let stat = Unix.close_process_full p in
   print_endline @@ stat_code stat
-
 
 (* camlzip utils & tools *)
 
 let zip_bundle path_fn target =
   let bundle_zip = Gzip.open_out_chan ~level:7 path_fn in
-  Gzip.output bundle_zip target 0 (Bytes.length target);
+  Gzip.output bundle_zip target 0 (Bytes.length target) ;
   Gzip.close_out bundle_zip
 
 let get_bytes fn =
@@ -165,20 +157,19 @@ let get_bytes fn =
   let rec go sofar =
     match input_byte inc with
     | b -> go (b :: sofar)
-    | exception End_of_file -> List.rev sofar
-  in
+    | exception End_of_file -> List.rev sofar in
   let res = go [] in
-  close_in inc;
+  close_in inc ;
   res
 
-(** [write_gzipped_file file_name l s] writes to the file [file_name] 
-    the gzipped contents of string [s]. (Deprecated) *)
+(** [write_gzipped_file file_name l s] writes to the file [file_name] the
+    gzipped contents of string [s]. (Deprecated) *)
 let write_gzipped_file (file_name : string) (s : string) : unit =
   try
     let n = String.length s in
     if n > 0 then (
       let f = Gzip.open_out ~level:7 file_name in
-      Gzip.output_substring f s 0 n;
+      Gzip.output_substring f s 0 n ;
       Gzip.close_out f)
     else
       (* Zero length string: we write a zero length file. TO DO -> change to not creating file *)
@@ -186,10 +177,11 @@ let write_gzipped_file (file_name : string) (s : string) : unit =
       close_out f
   with Gzip.Error s -> raise (Gzip.Error (s ^ " writing file: " ^ file_name))
 
-(** [make_zipbundle ~keep_dir_struct:false dir_name archive_name] creates 
-    a zip containing the [.smt2] & [.ae] files present in the directory [dir_name]
-    (absolute path). The directory structure is not preserved when [keep_dir_struct]
-    is set to false as all the files are bundled together in the same main zipped directory. *)
+(** [make_zipbundle ~keep_dir_struct:false dir_name archive_name] creates a zip
+    containing the [.smt2] & [.ae] files present in the directory [dir_name]
+    (absolute path). The directory structure is not preserved when
+    [keep_dir_struct] is set to false as all the files are bundled together in
+    the same main zipped directory. *)
 let make_zipbundle (dir_name : string) (archive_name : string)
     ?(keep_dir_struct = true) : unit =
   try
@@ -205,7 +197,7 @@ let make_zipbundle (dir_name : string) (archive_name : string)
         else
           Zip.copy_file_to_entry ~extra:"target_file for smt solver"
             ~comment:"to be solved" ~level:7 e main_archive (remove_fn_dir e))
-      target_files;
+      target_files ;
     Zip.close_out main_archive
   with Zip.Error _ ->
     raise

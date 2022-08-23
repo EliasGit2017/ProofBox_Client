@@ -1,4 +1,5 @@
 open Data_types
+
 let user_test1 =
   {
     username = "test_user0";
@@ -109,3 +110,11 @@ let jobs =
       status = "scheduled";
     };
   ]
+
+let g_comm =
+  {
+    comm_desc = "test";
+    client_infos = "client info test";
+    infos = "info test";
+    error_desc = "error test";
+  }

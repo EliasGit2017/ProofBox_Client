@@ -1,5 +1,6 @@
 open Data_types
 open Str
+open EzAPI
 
 (* Conversion & data printing : ( *_to_string, *_of_string, etc) *)
 
@@ -91,3 +92,10 @@ let err_toml_print e =
   | Bad_toml_format -> "Toml_error.bad_toml_format"
   | Toml_not_found -> "Toml_error.toml_not_found"
   | Unknown -> "Toml.error.unknown"
+
+(*****************************************************************************)
+
+(* websocket handling *)
+(* Think about ws extra protocol to retrieve filename *)
+
+let mime_getter = [ Option.get @@ Mime.parse "application/zip" ]

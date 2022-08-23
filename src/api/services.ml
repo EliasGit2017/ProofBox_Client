@@ -19,7 +19,6 @@ let version_test =
     ~construct:version_test_to_string
     ()
 
-
 module Errors = struct
   let server_errors = [
     (* Generic error, for testing purposes *)
@@ -50,8 +49,8 @@ let version_test_json_body : (request_v, version, server_error_type, no_security
     ~name:"version"
     ~descr:"Trying to add json in body"
     ~params:[]
-    ~input:Encoding.request_v_enc
-    ~output:Encoding.version_enc
+    ~input:request_v_enc
+    ~output:version_enc
     ~errors:Errors.server_errors
     Path.(root // "version_json_body")
 
@@ -100,6 +99,26 @@ let sign_up_new_user : (user_description, general_comm, server_error_type, no_se
     ~output:general_comm_enc
     ~errors:Errors.server_errors
     Path.(root // "signup_return_auth_info")
+
+
+(* test ws *)
+let service : (string, string, exn, no_security) ws_service0 =
+  ws_service
+    ~input:(Json Json_encoding.string)
+    ~output:(Json Json_encoding.string)
+    Path.root
+
+(** Service to transfer zip archive from client to server *)
+let zip_tranfer : (general_comm (* string *), general_comm, exn, no_security) ws_service0 =
+  ws_service
+  ~section:section_main
+  ~name:"tranfer zip"
+  ~descr:"Sending ZIP archive"
+  ~params:[]
+  ~input:(Json general_comm_enc) (* (Raw mime_zip) *)
+  ~output:(Json general_comm_enc)
+  (* ~errors:Errors.server_errors *)
+  Path.(root // "zip_send")
 
 
 

@@ -1,0 +1,4 @@
+parse-docstrings = true
+nested-match=align
+sequence-style=separator
+break-before-in=auto
