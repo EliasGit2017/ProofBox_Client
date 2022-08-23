@@ -4,6 +4,7 @@ open Data_types
 open Utils
 
 let baseTOML_dir = "/home/elias/OCP/PROOFBOX_TestJobs/job_example1/"
+let zip_output = "/home/elias/OCP/ez_pb_client/example.zip"
 
 let get_main_toml =
   let res = get_all_files_w_ext baseTOML_dir ".toml" in
@@ -13,6 +14,27 @@ let get_main_toml =
     "No TOML found")
   else baseTOML_dir ^ List.hd res
 (* get absolute path through Sys ? *)
+
+(*****************************************************************************)
+
+(* Build metadata for zip and reqs builder *)
+
+let zip_entry_to_string (z_entry : Zip.entry) =
+  Printf.sprintf
+    "filename = %s; extra = %s; comment = %s; methd = %s; mtime = %f; crc = \
+     %d; uncompressed_size = %d; compressed_size = %d; is_directory = %b; \
+     file_offset = %d"
+    z_entry.filename z_entry.extra z_entry.comment
+    (match z_entry.methd with Stored -> "Stored" | Deflated -> "Deflated")
+    z_entry.mtime (Int32.to_int z_entry.crc) z_entry.uncompressed_size
+    z_entry.compressed_size z_entry.is_directory
+    (Int64.to_int z_entry.file_offset)
+
+let metadata_extractor =
+  let archive = Zip.open_in zip_output in
+  List.iter (fun x -> print_endline @@ zip_entry_to_string x) (Zip.entries archive)
+
+(*****************************************************************************)
 
 let retrieve_toml_values =
   let parsed_toml = Otoml.Parser.from_file get_main_toml in
@@ -44,6 +66,7 @@ let get_files parsed_toml = dir_contents @@ get_jd_path_tof parsed_toml
 
 let () =
   Printexc.record_backtrace true ;
-  print_endline @@ "Main Toml found at " ^ get_main_toml ;
-  make_zipbundle ~keep_dir_struct:false baseTOML_dir
-    "/home/elias/OCP/ez_pb_client/example.zip"
+  print_endline @@ "Main Toml found at " ^ get_main_toml;
+  metadata_extractor
+(* make_zipbundle ~keep_dir_struct:false baseTOML_dir
+   "/home/elias/OCP/ez_pb_client/example.zip" *)
