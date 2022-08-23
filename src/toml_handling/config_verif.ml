@@ -19,19 +19,8 @@ let get_main_toml =
 
 (* Build metadata for zip and reqs builder *)
 
-let zip_entry_to_string (z_entry : Zip.entry) =
-  Printf.sprintf
-    "filename = %s; extra = %s; comment = %s; methd = %s; mtime = %f; crc = \
-     %d; uncompressed_size = %d; compressed_size = %d; is_directory = %b; \
-     file_offset = %d"
-    z_entry.filename z_entry.extra z_entry.comment
-    (match z_entry.methd with Stored -> "Stored" | Deflated -> "Deflated")
-    z_entry.mtime (Int32.to_int z_entry.crc) z_entry.uncompressed_size
-    z_entry.compressed_size z_entry.is_directory
-    (Int64.to_int z_entry.file_offset)
-
-let metadata_extractor =
-  let archive = Zip.open_in zip_output in
+let metadata_extractor archive_filename =
+  let archive = Zip.open_in archive_filename in
   List.iter
     (fun x -> print_endline @@ zip_entry_to_string x)
     (Zip.entries archive)
@@ -69,6 +58,6 @@ let get_files parsed_toml = dir_contents @@ get_jd_path_tof parsed_toml
 let () =
   Printexc.record_backtrace true ;
   print_endline @@ "Main Toml found at " ^ get_main_toml ;
-  metadata_extractor
+  metadata_extractor zip_output
 (* make_zipbundle ~keep_dir_struct:false baseTOML_dir
    "/home/elias/OCP/ez_pb_client/example.zip" *)

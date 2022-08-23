@@ -81,6 +81,19 @@ let get_jobs arg api =
         Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
         end_request ())
 
+let send_meta_payload arg api =
+  begin_request () ;
+  EzRequest.ANY.post0
+    ~msg:"writting job in db and retrieving all jobs from user "
+    ~error:(error "Unable to send meta_payload ")
+    ~input:arg api Services.send_job_metadata (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        end_request ()
+    | Ok r -> (* if list length > 0 ==> make appropriate treatment *)
+        Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
+        end_request ())
+
 let get_specific_job arg api =
   begin_request () ;
   EzRequest.ANY.post0 ~msg:"Getting Specific job : "
@@ -191,8 +204,8 @@ let handle { conn; action = { send; close } } =
   Lwt.choose [ conn; loop 0 ]
 
 let my_ws_main () =
-  connect0 ~msg:"custom ws" ~react:gen_comm_react (EzAPI.BASE "http://localhost:8080")
-    Services.zip_tranfer
+  connect0 ~msg:"custom ws" ~react:gen_comm_react
+    (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
   >>= function
   | Error e -> error e
   | Ok con -> (
@@ -217,28 +230,29 @@ let ws_main () =
 let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
-  EzLwtSys.run my_ws_main
 
-(* let api = Printf.sprintf "http://localhost:%d" !api_port in
-   print_endline ("sending reqs to " ^ api);
-   let api = BASE api in
+  (* EzLwtSys.run my_ws_main *)
+  let api = Printf.sprintf "http://localhost:%d" !api_port in
+  print_endline ("sending reqs to " ^ api) ;
+  let api = BASE api in
 
-   let requests =
-     [
-       (* base_req2 { basic = "okok" };
-          base_req2 { basic = "okok" };
-          basic;
-          get_jobs { job_client_req = "ocamlpro" };
-          get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
-       (* test_session { basic = "okok" }; *)
-       test_signup Client_utils.Requests_input.fault_email_test_james;
-       test_signup Client_utils.Requests_input.fault_password_test_james;
-     ]
-   in
-   List.iter (fun test -> test api) requests;
-   if !nrequests > 0 then (
-     waiting := true;
-     EzLwtSys.run (fun () -> waiter));
-   print_endline (string_of_bool (check_password_validity "examPle!!//*dc,a22225"));
-   print_endline
-     (string_of_bool (check_email_validity "james.deanddeafgmail.com")) *)
+  let requests =
+    [
+      (* base_req2 { basic = "okok" };
+         base_req2 { basic = "okok" };
+         basic;
+         get_jobs { job_client_req = "ocamlpro" };
+         get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
+      (* test_session { basic = "okok" }; *)
+      (* test_signup Client_utils.Requests_input.fault_email_test_james; *)
+      (* test_signup Client_utils.Requests_input.fault_password_test_james; *)
+      send_meta_payload Client_utils.Requests_input.metadata_example;
+    ] in
+  List.iter (fun test -> test api) requests ;
+  if !nrequests > 0 then (
+    waiting := true ;
+    EzLwtSys.run (fun () -> waiter)) ;
+  print_endline
+    (string_of_bool (check_password_validity "examPle!!//*dc,a22225")) ;
+  print_endline
+    (string_of_bool (check_email_validity "james.deanddeafgmail.com"))

@@ -205,3 +205,15 @@ let make_zipbundle (dir_name : string) (archive_name : string)
          ( archive_name,
            "unspecified filename",
            " problem when writting files to archive" )
+
+
+let zip_entry_to_string (z_entry : Zip.entry) =
+  Printf.sprintf
+    "filename = %s; extra = %s; comment = %s; methd = %s; mtime = %f; crc = \
+     %d; uncompressed_size = %d; compressed_size = %d; is_directory = %b; \
+     file_offset = %d"
+    z_entry.filename z_entry.extra z_entry.comment
+    (match z_entry.methd with Stored -> "Stored" | Deflated -> "Deflated")
+    z_entry.mtime (Int32.to_int z_entry.crc) z_entry.uncompressed_size
+    z_entry.compressed_size z_entry.is_directory
+    (Int64.to_int z_entry.file_offset)

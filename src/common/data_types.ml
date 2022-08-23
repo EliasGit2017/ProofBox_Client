@@ -70,8 +70,9 @@ let toml_error_type err = match err with Toml_error typ -> typ | _ -> Unknown
 
 type meta_payload = {
   archive_name : string;
-  client_id : int;
+  client_id : string;
   comment : string;
+  priority : int;
   checksum_type : string;
   checksum : string;
   info : string;

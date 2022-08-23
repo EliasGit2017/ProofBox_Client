@@ -66,17 +66,18 @@ let default_server_response_to_string elem =
 
 let meta_payload_to_string (meta : Data_types.meta_payload) =
   Printf.sprintf
-    "archive_name = %s; client_id = %d; comment = %s; checksum_type = %s; \
+    "archive_name = %s; client_id = %s; comment = %s; priority = %d; checksum_type = %s; \
      checksum = %s; info = %s; error = %s; code = %d"
-    meta.archive_name meta.client_id meta.comment meta.checksum_type
+    meta.archive_name meta.client_id meta.comment meta.priority meta.checksum_type
     meta.checksum meta.info meta.error meta.code
 
-let meta_payload_from_string archive_name client_id comment checksum_type
-    checksum info error code =
+let meta_payload_from_string archive_name client_id comment priority
+    checksum_type checksum info error code =
   {
     archive_name;
     client_id;
     comment;
+    priority;
     checksum_type;
     checksum;
     info;
@@ -117,3 +118,4 @@ let err_toml_print e =
 (* Think about ws extra protocol to retrieve filename *)
 
 let mime_getter = [ Option.get @@ Mime.parse "application/zip" ]
+
