@@ -32,7 +32,9 @@ let zip_entry_to_string (z_entry : Zip.entry) =
 
 let metadata_extractor =
   let archive = Zip.open_in zip_output in
-  List.iter (fun x -> print_endline @@ zip_entry_to_string x) (Zip.entries archive)
+  List.iter
+    (fun x -> print_endline @@ zip_entry_to_string x)
+    (Zip.entries archive)
 
 (*****************************************************************************)
 
@@ -66,7 +68,7 @@ let get_files parsed_toml = dir_contents @@ get_jd_path_tof parsed_toml
 
 let () =
   Printexc.record_backtrace true ;
-  print_endline @@ "Main Toml found at " ^ get_main_toml;
+  print_endline @@ "Main Toml found at " ^ get_main_toml ;
   metadata_extractor
 (* make_zipbundle ~keep_dir_struct:false baseTOML_dir
    "/home/elias/OCP/ez_pb_client/example.zip" *)
