@@ -217,3 +217,7 @@ let zip_entry_to_string (z_entry : Zip.entry) =
     z_entry.mtime (Int32.to_int z_entry.crc) z_entry.uncompressed_size
     z_entry.compressed_size z_entry.is_directory
     (Int64.to_int z_entry.file_offset)
+
+(** Returns the human readable MD5 string associated to [file_name] *)
+let md5_checksum file_name =
+  Digest.file file_name |> Digest.to_hex
