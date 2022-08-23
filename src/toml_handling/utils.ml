@@ -206,7 +206,7 @@ let make_zipbundle (dir_name : string) (archive_name : string)
            "unspecified filename",
            " problem when writting files to archive" )
 
-
+(** Converts [Zip.entry list] (obtained from [Zip.entries]) to string  *)
 let zip_entry_to_string (z_entry : Zip.entry) =
   Printf.sprintf
     "filename = %s; extra = %s; comment = %s; methd = %s; mtime = %f; crc = \

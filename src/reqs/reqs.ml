@@ -6,8 +6,6 @@ open EzAPI
 open EzAPI.TYPES
 open EzWs
 
-(* Absolute trash ... Impossible to run any request ... *)
-
 let api_port = ref 8080
 let user1_login = "test_user60"
 let user1_password = "dummydedada1234!"
@@ -90,7 +88,8 @@ let send_meta_payload arg api =
     | Error e ->
         Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
         end_request ()
-    | Ok r -> (* if list length > 0 ==> make appropriate treatment *)
+    | Ok r ->
+        (* if list length > 0 ==> make appropriate treatment *)
         Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
         end_request ())
 
@@ -203,6 +202,7 @@ let handle { conn; action = { send; close } } =
     | Ok () -> Lwt.bind (EzLwtSys.sleep 11.) (fun () -> loop (i + 1)) in
   Lwt.choose [ conn; loop 0 ]
 
+(** Check exchange & switch to zip exchange (not [Data_types.general_comm]) *)
 let my_ws_main () =
   connect0 ~msg:"custom ws" ~react:gen_comm_react
     (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
