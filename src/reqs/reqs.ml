@@ -39,6 +39,9 @@ let error test n =
   Printf.eprintf "Error: request %s returned code %d\n%!" test n ;
   exit 2
 
+(* For websockets *)
+let error2 content = Lwt.return @@ EzDebug.printf "client error %s" content
+
 let basic api =
   begin_request () ;
   EzRequest.ANY.get0 ~msg:"simplest req possible" api Services.version
@@ -79,6 +82,8 @@ let get_jobs arg api =
         Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
         end_request ())
 
+(** Request to send meta_payload : returns all the jobs associated to the client
+    who initiated the exchange *)
 let send_meta_payload arg api =
   begin_request () ;
   EzRequest.ANY.post0
@@ -167,6 +172,37 @@ let test_signup arg api =
 
 (* Websocket client test *)
 
+let client_zt_react _send = function
+  | Ok s ->
+      EzDebug.printf "client got : { %s } from server" s ;
+      Lwt.return_ok ()
+  | Error e ->
+      EzDebug.printf "client got error from server : %s"
+        (Printexc.to_string (Proofbox_api_error e)) ;
+      Lwt.return_ok ()
+
+let handle_zt { conn; action = { send; close } } =
+  let send_zip =
+    send @@ "this should be a zip " >>= function
+    | Error _ -> close None
+    | Ok () -> Lwt.bind (EzLwtSys.sleep 1.) (fun () -> Lwt.return_ok ()) in
+  Lwt.choose [ conn; send_zip ]
+
+(* **************************************************** *)
+
+let my_zt_ws_main () =
+  connect0 ~msg:"custom ws" ~react:client_zt_react
+    (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
+  >>= function
+  | Error e -> error2 e
+  | Ok con -> (
+      handle_zt con >>= function
+      | Error e -> error2 e
+      | Ok () ->
+          EzDebug.printf "client connection ended properly" ;
+          Lwt.return_unit)
+
+
 let gen_comm_react _send = function
   | Ok s ->
       print_endline @@ default_server_response_to_string s ;
@@ -192,8 +228,6 @@ let react _send = function
       EzDebug.printf "client react to error: %s" (Printexc.to_string exn) ;
       Lwt.return_ok ()
 
-let error content = Lwt.return @@ EzDebug.printf "client error %s" content
-
 let handle { conn; action = { send; close } } =
   let rec loop i =
     EzDebug.printf "client loop step %d" i ;
@@ -203,36 +237,36 @@ let handle { conn; action = { send; close } } =
   Lwt.choose [ conn; loop 0 ]
 
 (** Check exchange & switch to zip exchange (not [Data_types.general_comm]) *)
-let my_ws_main () =
+(* let my_ws_main () =
   connect0 ~msg:"custom ws" ~react:gen_comm_react
     (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
   >>= function
-  | Error e -> error e
+  | Error e -> error2 e
   | Ok con -> (
       gen_comm_handle con Client_utils.Requests_input.g_comm >>= function
-      | Error e -> error e
+      | Error e -> error2 e
       | Ok () ->
           EzDebug.printf "client connection ended properly" ;
-          Lwt.return_unit)
+          Lwt.return_unit) *)
 
-let ws_main () =
+(* let ws_main () =
   connect0 ~msg:"ws" ~react (EzAPI.BASE "http://localhost:8080")
     Services.service
   >>= function
-  | Error e -> error e
+  | Error e -> error2 e
   | Ok con -> (
       handle con >>= function
-      | Error e -> error e
+      | Error e -> error2 e
       | Ok () ->
           EzDebug.printf "client connection ended properly" ;
-          Lwt.return_unit)
+          Lwt.return_unit) *)
 
 let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
 
-  (* EzLwtSys.run my_ws_main *)
-  let api = Printf.sprintf "http://localhost:%d" !api_port in
+  EzLwtSys.run my_zt_ws_main
+  (* let api = Printf.sprintf "http://localhost:%d" !api_port in
   print_endline ("sending reqs to " ^ api) ;
   let api = BASE api in
 
@@ -255,4 +289,4 @@ let () =
   print_endline
     (string_of_bool (check_password_validity "examPle!!//*dc,a22225")) ;
   print_endline
-    (string_of_bool (check_email_validity "james.deanddeafgmail.com"))
+    (string_of_bool (check_email_validity "james.deanddeafgmail.com")) *)

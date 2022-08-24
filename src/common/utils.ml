@@ -117,5 +117,5 @@ let err_toml_print e =
 (* websocket handling *)
 (* Think about ws extra protocol to retrieve filename *)
 
-let mime_getter = [ Option.get @@ Mime.parse "application/zip" ]
+let mime_zip = [ Option.get @@ Mime.parse "application/zip" ]
 

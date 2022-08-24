@@ -109,15 +109,15 @@ let service : (string, string, exn, no_security) ws_service0 =
     Path.root
 
 (** Service to transfer zip archive from client to server *)
-let zip_tranfer : (general_comm (* string *), general_comm, exn, no_security) ws_service0 =
+let zip_tranfer : (string, string, server_error_type, no_security) ws_service0 =
   ws_service
   ~section:section_main
   ~name:"tranfer zip"
   ~descr:"Sending ZIP archive"
   ~params:[]
-  ~input:(Json general_comm_enc) (* (Raw mime_zip) *)
-  ~output:(Json general_comm_enc)
-  (* ~errors:Errors.server_errors *)
+  ~input: (Raw mime_zip)
+  ~output:(Json Json_encoding.string)
+  ~errors:Errors.server_errors
   Path.(root // "zip_send")
 
 let send_job_metadata : (meta_payload, jobs, server_error_type, no_security) post_service0 =
