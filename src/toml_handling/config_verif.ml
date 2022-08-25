@@ -6,14 +6,6 @@ open Utils
 let baseTOML_dir = "/home/elias/OCP/PROOFBOX_TestJobs/job_example1/"
 let zip_output = "/home/elias/OCP/ez_pb_client/example.zip"
 
-let get_main_toml =
-  let res = get_all_files_w_ext baseTOML_dir ".toml" in
-  if List.length res = 0 then (
-    print_endline "Start thinking about errors and exceptions" ;
-    (* Throw exception here *)
-    "No TOML found")
-  else baseTOML_dir ^ List.hd res
-(* get absolute path through Sys ? *)
 
 (*****************************************************************************)
 
@@ -28,7 +20,7 @@ let metadata_reader archive_filename =
 (*****************************************************************************)
 
 let retrieve_toml_values =
-  let parsed_toml = Otoml.Parser.from_file get_main_toml in
+  let parsed_toml = Otoml.Parser.from_file (get_main_toml baseTOML_dir) in
   let htab_toml_values = Hashtbl.create 10 in
   try
     Hashtbl.add htab_toml_values "title" (get_title parsed_toml) ;
@@ -48,7 +40,7 @@ let retrieve_toml_values =
       (get_jd_path_tof parsed_toml) ;
     htab_toml_values
   with Type_error _ | Key_error _ ->
-    print_endline @@ Printf.sprintf "Badly formatted TOML at : %s" get_main_toml ;
+    print_endline @@ Printf.sprintf "Badly formatted TOML at : %s" (get_main_toml baseTOML_dir) ;
     raise (Toml_error Bad_toml_format)
 
 (** Retrieves the list of files [string]s reprensenting : absolute path +
@@ -57,7 +49,7 @@ let get_files parsed_toml = dir_contents @@ get_jd_path_tof parsed_toml
 
 let () =
   Printexc.record_backtrace true ;
-  print_endline @@ "Main Toml found at " ^ get_main_toml ;
-  metadata_reader zip_output
+  print_endline @@ "Main Toml found at " ^ get_main_toml baseTOML_dir ;
+  (* metadata_reader zip_output *)
 (* make_zipbundle ~keep_dir_struct:false baseTOML_dir
    "/home/elias/OCP/ez_pb_client/example.zip" *)

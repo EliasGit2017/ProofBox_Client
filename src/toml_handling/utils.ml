@@ -1,5 +1,6 @@
 open Otoml
 open Str
+open Data_types
 
 (* Otoml : Utils to get / set values and acces toml files simply &
    Wrappers over some functions : https://github.com/dmbaturin/otoml*)
@@ -105,6 +106,17 @@ let get_all_files_w_ext wd ext =
   Sys.readdir wd |> Array.to_list
   |> List.filter (fun x -> Filename.extension x = ext)
 
+(** Retrieve main toml located in working dir. Checks that there is only one
+    [.toml] available *)
+let get_main_toml working_dir =
+  let res = get_all_files_w_ext working_dir ".toml" in
+  if List.length res = 0 then (
+    print_endline "Start thinking about errors and exceptions" ;
+    raise (Toml_error Toml_not_found)) ;
+  if List.length res > 1 then raise (Toml_error Multiple_Toml_files)
+  else working_dir ^ List.hd res
+(* get absolute path through Sys ? instead of working_dir arg ? *)
+
 (** [dir_contents] returns the paths of all regular files ([.smt2] && [.ae])
     that are contained in [dir]. Each file is a path starting with [dir].*)
 let dir_contents dir =
@@ -152,16 +164,6 @@ let zip_bundle path_fn target =
   Gzip.output bundle_zip target 0 (Bytes.length target) ;
   Gzip.close_out bundle_zip
 
-let get_bytes fn =
-  let inc = open_in_bin fn in
-  let rec go sofar =
-    match input_byte inc with
-    | b -> go (b :: sofar)
-    | exception End_of_file -> List.rev sofar in
-  let res = go [] in
-  close_in inc ;
-  res
-
 (** [write_gzipped_file file_name l s] writes to the file [file_name] the
     gzipped contents of string [s]. (Deprecated) *)
 let write_gzipped_file (file_name : string) (s : string) : unit =
@@ -185,7 +187,8 @@ let write_gzipped_file (file_name : string) (s : string) : unit =
 let make_zipbundle (dir_name : string) (archive_name : string)
     ?(keep_dir_struct = true) : unit =
   try
-    let target_files = dir_contents dir_name in
+    (* Include toml file and verify it is unique *)
+    let target_files = get_main_toml dir_name :: dir_contents dir_name in
     let main_archive =
       Zip.open_out ~comment:"Main archive containing target files" archive_name
     in
@@ -206,7 +209,7 @@ let make_zipbundle (dir_name : string) (archive_name : string)
            "unspecified filename",
            " problem when writting files to archive" )
 
-(** Converts [Zip.entry list] (obtained from [Zip.entries]) to string  *)
+(** Converts [Zip.entry list] (obtained from [Zip.entries]) to string *)
 let zip_entry_to_string (z_entry : Zip.entry) =
   Printf.sprintf
     "filename = %s; extra = %s; comment = %s; methd = %s; mtime = %f; crc = \
@@ -219,5 +222,4 @@ let zip_entry_to_string (z_entry : Zip.entry) =
     (Int64.to_int z_entry.file_offset)
 
 (** Returns the human readable MD5 string associated to [file_name] *)
-let md5_checksum file_name =
-  Digest.file file_name |> Digest.to_hex
+let md5_checksum file_name = Digest.file file_name |> Digest.to_hex

@@ -110,6 +110,7 @@ let err_toml_print e =
   match e with
   | Bad_toml_format -> "Toml_error.bad_toml_format"
   | Toml_not_found -> "Toml_error.toml_not_found"
+  | Multiple_Toml_files -> "Toml.error.multiple_toml_found"
   | Unknown -> "Toml.error.unknown"
 
 (*****************************************************************************)
@@ -119,3 +120,12 @@ let err_toml_print e =
 
 let mime_zip = [ Option.get @@ Mime.parse "application/zip" ]
 
+let get_bytes fn =
+  let inc = open_in_bin fn in
+  let rec go sofar =
+    match input_byte inc with
+    | b -> go (b :: sofar)
+    | exception End_of_file -> List.rev sofar in
+  let res = go [] in
+  close_in inc ;
+  res

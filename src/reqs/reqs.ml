@@ -170,6 +170,20 @@ let test_signup arg api =
 
 (* **************************************************** *)
 
+let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
+
+let zip_to_str zip_name =
+  let zc = open_in_bin zip_name in
+  let rec serialize acc =
+    match input_char zc with
+    | e -> serialize (e :: acc)
+    | exception End_of_file -> List.rev acc in
+  let res = serialize [] in
+  close_in zc;
+  String.of_seq (List.to_seq res)
+  
+
+
 (* Websocket client test *)
 
 let client_zt_react _send = function
@@ -183,7 +197,7 @@ let client_zt_react _send = function
 
 let handle_zt { conn; action = { send; close } } =
   let send_zip =
-    send @@ "this should be a zip " >>= function
+    send @@ (zip_to_str ztest) >>= function
     | Error _ -> close None
     | Ok () -> Lwt.bind (EzLwtSys.sleep 1.) (fun () -> Lwt.return_ok ()) in
   Lwt.choose [ conn; send_zip ]
@@ -191,7 +205,7 @@ let handle_zt { conn; action = { send; close } } =
 (* **************************************************** *)
 
 let my_zt_ws_main () =
-  connect0 ~msg:"custom ws" ~react:client_zt_react
+  connect0 ~msg:"zip transfert webssocket" ~react:client_zt_react
     (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
   >>= function
   | Error e -> error2 e
