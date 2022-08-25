@@ -1,5 +1,5 @@
-(** Module [Data_type] defines all the types (input, queries, server errors ...)
-    used by server and client *)
+(** Module [Data_type] defines all the types (input, queries, server errors ...) used by server and client *)
+open EzAPI
 
 type www_server_info = { www_apis : string list }
 (** Type that lists all server host names *)
@@ -62,11 +62,9 @@ type general_comm = {
 type toml_error_type = | Bad_toml_format | Toml_not_found | Multiple_Toml_files | Unknown
 
 exception Toml_error of toml_error_type
-
 let toml_error typ = Toml_error typ
 let toml_error_type err = match err with Toml_error typ -> typ | _ -> Unknown
 
-(* ************************************************************** *)
 
 type meta_payload = {
   archive_name : string;
@@ -76,6 +74,7 @@ type meta_payload = {
   checksum_type : string;
   checksum : string;
   info : string;
+  content : string;
   error : string;
   code : int;
 }

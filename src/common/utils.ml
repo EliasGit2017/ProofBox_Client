@@ -1,5 +1,5 @@
 open Data_types
-open Str
+(* open Str *)
 open EzAPI
 
 (* Conversion & data printing : ( *_to_string, *_of_string, etc) *)
@@ -72,7 +72,7 @@ let meta_payload_to_string (meta : Data_types.meta_payload) =
     meta.checksum meta.info meta.error meta.code
 
 let meta_payload_from_string archive_name client_id comment priority
-    checksum_type checksum info error code =
+    checksum_type checksum info content error code =
   {
     archive_name;
     client_id;
@@ -81,6 +81,7 @@ let meta_payload_from_string archive_name client_id comment priority
     checksum_type;
     checksum;
     info;
+    content;
     error;
     code;
   }
@@ -124,3 +125,17 @@ let get_bytes fn =
   let res = go [] in
   close_in inc ;
   res
+
+(** Returns the human readable MD5 string associated to [file_name] *)
+let md5_checksum file_name = Digest.file file_name |> Digest.to_hex
+
+
+let zip_to_str zip_name =
+  let zc = open_in_bin zip_name in
+  let rec serialize acc =
+    match input_char zc with
+    | e -> serialize (e :: acc)
+    | exception End_of_file -> List.rev acc in
+  let res = serialize [] in
+  close_in zc ;
+  String.of_seq (List.to_seq res)

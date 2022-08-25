@@ -124,10 +124,12 @@ let metadata_example =
     archive_name = "/home/elias/OCP/ez_pb_client/example.zip";
     client_id = "ocamlpro";
     comment = "this is an example comment, unused in data exchange";
-    priority = 299;
+    priority = 300;
     checksum_type = "MD5";
     checksum = Digest.file "/home/elias/OCP/ez_pb_client/example.zip" |> Digest.to_hex;
     info = "first draft of metadata exchange service";
+    content = Utils.zip_to_str "/home/elias/OCP/ez_pb_client/example.zip" ;
     error = "Should be no error";
     code = 200;
   }
+

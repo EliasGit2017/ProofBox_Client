@@ -172,16 +172,6 @@ let test_signup arg api =
 
 let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
 
-let zip_to_str zip_name =
-  let zc = open_in_bin zip_name in
-  let rec serialize acc =
-    match input_char zc with
-    | e -> serialize (e :: acc)
-    | exception End_of_file -> List.rev acc in
-  let res = serialize [] in
-  close_in zc ;
-  String.of_seq (List.to_seq res)
-
 (* Websocket client test *)
 
 let client_zt_react _send = function
@@ -216,6 +206,42 @@ let my_zt_ws_main () =
 
 (* **************************************************** *)
 
+let client_zt_react1 _send = function
+  | Ok s ->
+      EzDebug.printf "client got : { %s || %s } from server" s.comment s.info ;
+      Lwt.return_ok ()
+  | Error e ->
+      EzDebug.printf "client got error from server : %s"
+        (Printexc.to_string (Proofbox_api_error e)) ;
+      Lwt.return_ok ()
+
+let handle_zt1 { conn; action = { send; close } } =
+  let rec send_zip1 () =
+    EzDebug.log "Sending zip to elem" ;
+    let zip = zip_to_str "/home/elias/OCP/PROOFBOX_TestJobs/ok.zip" in
+    send
+    @@ meta_payload_from_string "ok.zip" "ocamlpro" "sending payload zip"
+         300 "MD5" (md5_checksum ztest) "ok" "" "no" 0
+    >>= function
+    | Error _ -> close None
+    | Ok () -> Lwt.bind (EzLwtSys.sleep 20.) (fun () -> send_zip1 ())  in
+  Lwt.choose [ conn; send_zip1 () ]
+
+let my_zt_ws_main1 () =
+  connect0 ~msg:"zip transfert webssocket in json encoding"
+    ~react:client_zt_react1 (EzAPI.BASE "http://localhost:8080")
+    Services.send_job_metadata_and_payload
+  >>= function
+  | Error e -> error2 e
+  | Ok con -> (
+      handle_zt1 con >>= function
+      | Error e -> error2 e
+      | Ok () ->
+          EzDebug.printf "client connection ended properly" ;
+          Lwt.return_unit)
+
+(* **************************************************** *)
+
 let gen_comm_react _send = function
   | Ok s ->
       print_endline @@ default_server_response_to_string s ;
@@ -232,7 +258,6 @@ let gen_comm_handle { conn; action = { send; close } }
     | Error _ -> close None
     | Ok () -> Lwt.bind (EzLwtSys.sleep 0.) (fun () -> response ()) in
   Lwt.choose [ conn; response () ]
-
 
 (** Check exchange & switch to zip exchange (not [Data_types.general_comm]) ==>
     Example of websocket using Json encoding *)
@@ -252,7 +277,8 @@ let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
 
-  EzLwtSys.run my_zt_ws_main
+  EzLwtSys.run my_zt_ws_main1
+
 (* let api = Printf.sprintf "http://localhost:%d" !api_port in
    print_endline ("sending reqs to " ^ api) ;
    let api = BASE api in

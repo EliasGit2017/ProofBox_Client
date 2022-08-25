@@ -9,7 +9,6 @@ open Utils
 let path_to_toml = "/home/elias/OCP/ez_proofbox/src/backend_arch"
 let testunix = Unix.getcwd
 let accepted_formats = [ ".smt2"; ".ae" ]
-
 let title_toml = [ "title" ]
 let owner_username = [ "owner"; "username" ]
 let owner_email = [ "owner"; "email" ]
@@ -57,7 +56,6 @@ let get_jd_job_synopsis parsed_toml =
   get_str parsed_toml job_description_synopsis
 
 let get_jd_path_tof parsed_toml = get_str parsed_toml job_description_path_tof
-
 
 let err_toml_print e =
   match e with
@@ -211,14 +209,14 @@ let make_zipbundle ?(keep_dir_struct = true) (dir_name : string)
             ~comment:"to be solved" ~level:7 e main_archive (remove_fn_dir e))
       target_files ;
     Zip.close_out main_archive
-  with | Zip.Error _ ->
-    raise
-    @@ Zip.Error
-         ( archive_name,
-           "unspecified filename",
-           " problem when writting files to archive" )
-
-    | Toml_error e -> print_endline @@ err_toml_print e
+  with
+  | Zip.Error _ ->
+      raise
+      @@ Zip.Error
+           ( archive_name,
+             "unspecified filename",
+             " problem when writting files to archive" )
+  | Toml_error e -> print_endline @@ err_toml_print e
 
 (** Converts [Zip.entry list] (obtained from [Zip.entries]) to string *)
 let zip_entry_to_string (z_entry : Zip.entry) =

@@ -31,7 +31,6 @@ module Errors = struct
   ]
 end
 
-
 let version : (version, server_error_type, no_security) service0 =
   service
     ~section:section_main
@@ -100,26 +99,19 @@ let sign_up_new_user : (user_description, general_comm, server_error_type, no_se
     ~errors:Errors.server_errors
     Path.(root // "signup_return_auth_info")
 
-
-(* test ws *)
-let service : (string, string, exn, no_security) ws_service0 =
-  ws_service
-    ~input:(Json Json_encoding.string)
-    ~output:(Json Json_encoding.string)
-    Path.root
-
 (** Service to transfer zip archive from client to server *)
-let zip_tranfer : (string, string, server_error_type, no_security) ws_service0 =
+let zip_tranfer : (string, string (* general_comm *), server_error_type, no_security) ws_service0 =
   ws_service
   ~section:section_main
   ~name:"tranfer zip"
   ~descr:"Sending ZIP archive"
   ~params:[]
   ~input: (Raw mime_zip)
-  ~output:(Json Json_encoding.string)
+  ~output:(* (Json general_comm_enc) *) (Json Json_encoding.string)
   ~errors:Errors.server_errors
   Path.(root // "zip_send")
 
+(** deprecated : remove asap *)
 let send_job_metadata : (meta_payload, jobs, server_error_type, no_security) post_service0 =
   post_service
   ~section:section_main
@@ -130,4 +122,15 @@ let send_job_metadata : (meta_payload, jobs, server_error_type, no_security) pos
   ~output:jobs
   ~errors:Errors.server_errors
   Path.(root // "job_metadata")
+
+let send_job_metadata_and_payload : (meta_payload, meta_payload, server_error_type, no_security) ws_service0 =
+  ws_service
+  ~section:section_main
+  ~name:"send_job_metadata"
+  ~descr:"send metadata associated to a job (and ask for server availability)"
+  ~params:[]
+  ~input:(Json meta_payload_enc)
+  ~output:(Json meta_payload_enc)
+  ~errors:Errors.server_errors
+  Path.(root // "job_metadata_and_payload")
 
