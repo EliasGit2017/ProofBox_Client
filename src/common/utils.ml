@@ -106,12 +106,7 @@ let check_password_validity password =
 
 (* Error printing *)
 
-let err_toml_print e =
-  match e with
-  | Bad_toml_format -> "Toml_error.bad_toml_format"
-  | Toml_not_found -> "Toml_error.toml_not_found"
-  | Multiple_Toml_files -> "Toml.error.multiple_toml_found"
-  | Unknown -> "Toml.error.unknown"
+(* regroup error printers / strings here *)
 
 (*****************************************************************************)
 

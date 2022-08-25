@@ -179,10 +179,8 @@ let zip_to_str zip_name =
     | e -> serialize (e :: acc)
     | exception End_of_file -> List.rev acc in
   let res = serialize [] in
-  close_in zc;
+  close_in zc ;
   String.of_seq (List.to_seq res)
-  
-
 
 (* Websocket client test *)
 
@@ -197,9 +195,9 @@ let client_zt_react _send = function
 
 let handle_zt { conn; action = { send; close } } =
   let send_zip =
-    send @@ (zip_to_str ztest) >>= function
+    send @@ zip_to_str ztest >>= function
     | Error _ -> close None
-    | Ok () -> Lwt.bind (EzLwtSys.sleep 1.) (fun () -> Lwt.return_ok ()) in
+    | Ok () -> Lwt.return_ok () in
   Lwt.choose [ conn; send_zip ]
 
 (* **************************************************** *)
@@ -216,6 +214,7 @@ let my_zt_ws_main () =
           EzDebug.printf "client connection ended properly" ;
           Lwt.return_unit)
 
+(* **************************************************** *)
 
 let gen_comm_react _send = function
   | Ok s ->
@@ -234,73 +233,47 @@ let gen_comm_handle { conn; action = { send; close } }
     | Ok () -> Lwt.bind (EzLwtSys.sleep 0.) (fun () -> response ()) in
   Lwt.choose [ conn; response () ]
 
-let react _send = function
-  | Ok s ->
-      EzDebug.printf "client react: %s" s ;
-      Lwt.return_ok ()
-  | Error exn ->
-      EzDebug.printf "client react to error: %s" (Printexc.to_string exn) ;
-      Lwt.return_ok ()
 
-let handle { conn; action = { send; close } } =
-  let rec loop i =
-    EzDebug.printf "client loop step %d" i ;
-    send @@ "client send " ^ string_of_int i >>= function
-    | Error _ -> close None
-    | Ok () -> Lwt.bind (EzLwtSys.sleep 11.) (fun () -> loop (i + 1)) in
-  Lwt.choose [ conn; loop 0 ]
-
-(** Check exchange & switch to zip exchange (not [Data_types.general_comm]) *)
+(** Check exchange & switch to zip exchange (not [Data_types.general_comm]) ==>
+    Example of websocket using Json encoding *)
 (* let my_ws_main () =
-  connect0 ~msg:"custom ws" ~react:gen_comm_react
-    (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
-  >>= function
-  | Error e -> error2 e
-  | Ok con -> (
-      gen_comm_handle con Client_utils.Requests_input.g_comm >>= function
-      | Error e -> error2 e
-      | Ok () ->
-          EzDebug.printf "client connection ended properly" ;
-          Lwt.return_unit) *)
-
-(* let ws_main () =
-  connect0 ~msg:"ws" ~react (EzAPI.BASE "http://localhost:8080")
-    Services.service
-  >>= function
-  | Error e -> error2 e
-  | Ok con -> (
-      handle con >>= function
-      | Error e -> error2 e
-      | Ok () ->
-          EzDebug.printf "client connection ended properly" ;
-          Lwt.return_unit) *)
+   connect0 ~msg:"custom ws" ~react:gen_comm_react
+     (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
+   >>= function
+   | Error e -> error2 e
+   | Ok con -> (
+       gen_comm_handle con Client_utils.Requests_input.g_comm >>= function
+       | Error e -> error2 e
+       | Ok () ->
+           EzDebug.printf "client connection ended properly" ;
+           Lwt.return_unit) *)
 
 let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
 
   EzLwtSys.run my_zt_ws_main
-  (* let api = Printf.sprintf "http://localhost:%d" !api_port in
-  print_endline ("sending reqs to " ^ api) ;
-  let api = BASE api in
+(* let api = Printf.sprintf "http://localhost:%d" !api_port in
+   print_endline ("sending reqs to " ^ api) ;
+   let api = BASE api in
 
-  let requests =
-    [
-      (* base_req2 { basic = "okok" };
-         base_req2 { basic = "okok" };
-         basic;
-         get_jobs { job_client_req = "ocamlpro" };
-         get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
-      (* test_session { basic = "okok" }; *)
-      (* test_signup Client_utils.Requests_input.fault_email_test_james; *)
-      (* test_signup Client_utils.Requests_input.fault_password_test_james; *)
-      send_meta_payload Client_utils.Requests_input.metadata_example;
-    ] in
-  List.iter (fun test -> test api) requests ;
-  if !nrequests > 0 then (
-    waiting := true ;
-    EzLwtSys.run (fun () -> waiter)) ;
-  print_endline
-    (string_of_bool (check_password_validity "examPle!!//*dc,a22225")) ;
-  print_endline
-    (string_of_bool (check_email_validity "james.deanddeafgmail.com")) *)
+   let requests =
+     [
+       (* base_req2 { basic = "okok" };
+          base_req2 { basic = "okok" };
+          basic;
+          get_jobs { job_client_req = "ocamlpro" };
+          get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
+       (* test_session { basic = "okok" }; *)
+       (* test_signup Client_utils.Requests_input.fault_email_test_james; *)
+       (* test_signup Client_utils.Requests_input.fault_password_test_james; *)
+       send_meta_payload Client_utils.Requests_input.metadata_example;
+     ] in
+   List.iter (fun test -> test api) requests ;
+   if !nrequests > 0 then (
+     waiting := true ;
+     EzLwtSys.run (fun () -> waiter)) ;
+   print_endline
+     (string_of_bool (check_password_validity "examPle!!//*dc,a22225")) ;
+   print_endline
+     (string_of_bool (check_email_validity "james.deanddeafgmail.com")) *)

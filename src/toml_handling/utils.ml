@@ -1,9 +1,14 @@
 open Otoml
 open Str
 open Data_types
+open Utils
 
 (* Otoml : Utils to get / set values and acces toml files simply &
    Wrappers over some functions : https://github.com/dmbaturin/otoml*)
+
+let path_to_toml = "/home/elias/OCP/ez_proofbox/src/backend_arch"
+let testunix = Unix.getcwd
+let accepted_formats = [ ".smt2"; ".ae" ]
 
 let title_toml = [ "title" ]
 let owner_username = [ "owner"; "username" ]
@@ -53,11 +58,15 @@ let get_jd_job_synopsis parsed_toml =
 
 let get_jd_path_tof parsed_toml = get_str parsed_toml job_description_path_tof
 
-(* Unix : tools *)
 
-let path_to_toml = "/home/elias/OCP/ez_proofbox/src/backend_arch"
-let testunix = Unix.getcwd
-let accepted_formats = [ ".smt2"; ".ae" ]
+let err_toml_print e =
+  match e with
+  | Bad_toml_format -> "Toml_error.bad_toml_format"
+  | Toml_not_found -> "Toml_error.toml_not_found"
+  | Multiple_Toml_files -> "Toml.error.multiple_toml_found"
+  | Unknown -> "Toml.error.unknown"
+
+(* Unix : tools *)
 
 (** Returns a string describing Unix error status code *)
 let stat_code status =
@@ -184,8 +193,8 @@ let write_gzipped_file (file_name : string) (s : string) : unit =
     (absolute path). The directory structure is not preserved when
     [keep_dir_struct] is set to false as all the files are bundled together in
     the same main zipped directory. *)
-let make_zipbundle (dir_name : string) (archive_name : string)
-    ?(keep_dir_struct = true) : unit =
+let make_zipbundle ?(keep_dir_struct = true) (dir_name : string)
+    (archive_name : string) : unit =
   try
     (* Include toml file and verify it is unique *)
     let target_files = get_main_toml dir_name :: dir_contents dir_name in
@@ -202,12 +211,14 @@ let make_zipbundle (dir_name : string) (archive_name : string)
             ~comment:"to be solved" ~level:7 e main_archive (remove_fn_dir e))
       target_files ;
     Zip.close_out main_archive
-  with Zip.Error _ ->
+  with | Zip.Error _ ->
     raise
     @@ Zip.Error
          ( archive_name,
            "unspecified filename",
            " problem when writting files to archive" )
+
+    | Toml_error e -> print_endline @@ err_toml_print e
 
 (** Converts [Zip.entry list] (obtained from [Zip.entries]) to string *)
 let zip_entry_to_string (z_entry : Zip.entry) =
