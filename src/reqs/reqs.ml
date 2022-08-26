@@ -170,6 +170,7 @@ let test_signup arg api =
 
 (* **************************************************** *)
 
+(** Source for test zip *)
 let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
 
 let zip_to_str zip_name =
@@ -215,38 +216,6 @@ let my_zt_ws_main () =
           Lwt.return_unit)
 
 (* **************************************************** *)
-
-let gen_comm_react _send = function
-  | Ok s ->
-      print_endline @@ default_server_response_to_string s ;
-      Lwt.return_ok ()
-  | Error exn ->
-      (* print_endline "error from client react gen_comm" ; *)
-      EzDebug.printf "client react to error: %s" (Printexc.to_string exn) ;
-      Lwt.return_ok ()
-
-let gen_comm_handle { conn; action = { send; close } }
-    (my_rec : Data_types.general_comm) =
-  let rec response () =
-    send @@ my_rec >>= function
-    | Error _ -> close None
-    | Ok () -> Lwt.bind (EzLwtSys.sleep 0.) (fun () -> response ()) in
-  Lwt.choose [ conn; response () ]
-
-
-(** Check exchange & switch to zip exchange (not [Data_types.general_comm]) ==>
-    Example of websocket using Json encoding *)
-(* let my_ws_main () =
-   connect0 ~msg:"custom ws" ~react:gen_comm_react
-     (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
-   >>= function
-   | Error e -> error2 e
-   | Ok con -> (
-       gen_comm_handle con Client_utils.Requests_input.g_comm >>= function
-       | Error e -> error2 e
-       | Ok () ->
-           EzDebug.printf "client connection ended properly" ;
-           Lwt.return_unit) *)
 
 let () =
   Printexc.record_backtrace true ;
