@@ -82,22 +82,6 @@ let get_jobs arg api =
         Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
         end_request ())
 
-(** Request to send meta_payload : returns all the jobs associated to the client
-    who initiated the exchange *)
-let send_meta_payload arg api =
-  begin_request () ;
-  EzRequest.ANY.post0
-    ~msg:"writting job in db and retrieving all jobs from user "
-    ~error:(error "Unable to send meta_payload ")
-    ~input:arg api Services.send_job_metadata (function
-    | Error e ->
-        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
-        end_request ()
-    | Ok r ->
-        (* if list length > 0 ==> make appropriate treatment *)
-        Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
-        end_request ())
-
 let get_specific_job arg api =
   begin_request () ;
   EzRequest.ANY.post0 ~msg:"Getting Specific job : "
@@ -215,14 +199,35 @@ let my_zt_ws_main () =
           EzDebug.printf "client connection ended properly" ;
           Lwt.return_unit)
 
+
+(** Request to send meta_payload : returns all the jobs associated to the client
+    who initiated the exchange *)
+let send_meta_payload arg api =
+  begin_request () ;
+  EzRequest.ANY.post0
+    ~msg:"writting job in db and retrieving all jobs from user "
+    ~error:(error "Unable to send meta_payload ")
+    ~input:arg api Services.send_job_metadata (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        (* end_request () *)
+    | Ok r ->
+        (* if list length > 0 ==> make appropriate treatment *)
+        Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
+        (* run websocket once job is inserted in db all all given jobs are returned *)
+        (* Lwt.ignore_result @@ my_zt_ws_main () *)
+        let _ = Lwt.bind (my_zt_ws_main ()) (Lwt.return_ok) in
+        ()
+        (* end_request () *)
+        )
 (* **************************************************** *)
 
 let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
 
-  EzLwtSys.run my_zt_ws_main
-(* let api = Printf.sprintf "http://localhost:%d" !api_port in
+  (* EzLwtSys.run my_zt_ws_main *)
+let api = Printf.sprintf "http://localhost:%d" !api_port in
    print_endline ("sending reqs to " ^ api) ;
    let api = BASE api in
 
@@ -242,7 +247,5 @@ let () =
    if !nrequests > 0 then (
      waiting := true ;
      EzLwtSys.run (fun () -> waiter)) ;
-   print_endline
-     (string_of_bool (check_password_validity "examPle!!//*dc,a22225")) ;
-   print_endline
-     (string_of_bool (check_email_validity "james.deanddeafgmail.com")) *)
+   
+     
