@@ -124,3 +124,14 @@ let get_bytes fn =
   let res = go [] in
   close_in inc ;
   res
+
+(** Serialize zip file *)
+let zip_to_str zip_name =
+  let zc = open_in_bin zip_name in
+  let rec serialize acc =
+    match input_char zc with
+    | e -> serialize (e :: acc)
+    | exception End_of_file -> List.rev acc in
+  let res = serialize [] in
+  close_in zc ;
+  String.of_seq (List.to_seq res)

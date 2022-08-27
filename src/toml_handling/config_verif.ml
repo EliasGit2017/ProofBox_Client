@@ -50,6 +50,7 @@ let get_files parsed_toml = dir_contents @@ get_jd_path_tof parsed_toml
 let () =
   Printexc.record_backtrace true ;
   print_endline @@ "Main Toml found at " ^ get_main_toml baseTOML_dir ;
+  stringlist_printer @@ get_main_toml baseTOML_dir :: dir_contents baseTOML_dir
   (* metadata_reader zip_output *)
 (* make_zipbundle ~keep_dir_struct:false baseTOML_dir
    "/home/elias/OCP/ez_pb_client/example.zip" *)

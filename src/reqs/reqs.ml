@@ -157,21 +157,14 @@ let test_signup arg api =
 (** Source for test zip *)
 let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
 
-let zip_to_str zip_name =
-  let zc = open_in_bin zip_name in
-  let rec serialize acc =
-    match input_char zc with
-    | e -> serialize (e :: acc)
-    | exception End_of_file -> List.rev acc in
-  let res = serialize [] in
-  close_in zc ;
-  String.of_seq (List.to_seq res)
-
 (* Websocket client test *)
+
+let g_base = ref ""
 
 let client_zt_react _send = function
   | Ok s ->
       EzDebug.printf "client got : { %s } from server" s ;
+      g_base := s ;
       Lwt.return_ok ()
   | Error e ->
       EzDebug.printf "client got error from server : %s"
@@ -179,15 +172,21 @@ let client_zt_react _send = function
       Lwt.return_ok ()
 
 let handle_zt { conn; action = { send; close } } =
-  let send_zip =
-    send @@ zip_to_str ztest >>= function
-    | Error _ -> close None
-    | Ok () -> Lwt.return_ok () in
-  Lwt.choose [ conn; send_zip ]
+  let rec send_zip () =
+    if compare (String.split_on_char ' ' !g_base |> List.hd) "echo" = 0 then (
+      EzDebug.printf "Stop connection" ;
+      Lwt.return_ok ())
+    else (
+      EzDebug.printf "sending zip in client handler" ;
+      send @@ zip_to_str ztest >>= function
+      | Error _ -> close None
+      | Ok () -> Lwt.bind (EzLwtSys.sleep 10.) (fun () -> send_zip ())) in
+  Lwt.choose [ conn; send_zip () ]
 
 (* **************************************************** *)
 
 let my_zt_ws_main () =
+  begin_request () ;
   connect0 ~msg:"zip transfert webssocket" ~react:client_zt_react
     (EzAPI.BASE "http://localhost:8080") Services.zip_tranfer
   >>= function
@@ -197,55 +196,44 @@ let my_zt_ws_main () =
       | Error e -> error2 e
       | Ok () ->
           EzDebug.printf "client connection ended properly" ;
+          end_request () ;
           Lwt.return_unit)
-
 
 (** Request to send meta_payload : returns all the jobs associated to the client
     who initiated the exchange *)
 let send_meta_payload arg api =
   begin_request () ;
   EzRequest.ANY.post0
-    ~msg:"writting job in db and retrieving all jobs from user "
-    ~error:(error "Unable to send meta_payload ")
+    ~msg:
+      "writting job in db and retrieving all jobs from user => initiating ws \
+       to transfer zip"
+    ~error:(error "Unable to send meta_payload & send job to server")
     ~input:arg api Services.send_job_metadata (function
     | Error e ->
         Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
-        (* end_request () *)
+        end_request ()
     | Ok r ->
-        (* if list length > 0 ==> make appropriate treatment *)
         Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
         (* run websocket once job is inserted in db all all given jobs are returned *)
-        (* Lwt.ignore_result @@ my_zt_ws_main () *)
-        let _ = Lwt.bind (my_zt_ws_main ()) (Lwt.return_ok) in
-        ()
-        (* end_request () *)
-        )
+        let _ = my_zt_ws_main () in
+        end_request ())
 (* **************************************************** *)
 
 let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
 
-  (* EzLwtSys.run my_zt_ws_main *)
-let api = Printf.sprintf "http://localhost:%d" !api_port in
-   print_endline ("sending reqs to " ^ api) ;
-   let api = BASE api in
-
-   let requests =
-     [
-       (* base_req2 { basic = "okok" };
-          base_req2 { basic = "okok" };
-          basic;
-          get_jobs { job_client_req = "ocamlpro" };
-          get_specific_job {job_client = "ocamlpro"; job_ref_tag_v = 1}; *)
-       (* test_session { basic = "okok" }; *)
-       (* test_signup Client_utils.Requests_input.fault_email_test_james; *)
-       (* test_signup Client_utils.Requests_input.fault_password_test_james; *)
-       send_meta_payload Client_utils.Requests_input.metadata_example;
-     ] in
-   List.iter (fun test -> test api) requests ;
-   if !nrequests > 0 then (
-     waiting := true ;
-     EzLwtSys.run (fun () -> waiter)) ;
-   
-     
+  (* EzLwtSys.run my_zt_ws_main  *)
+  let api = Printf.sprintf "http://localhost:%d" !api_port in
+  print_endline ("sending reqs to " ^ api) ;
+  let api = BASE api in
+  let requests =
+    [
+      send_meta_payload Client_utils.Requests_input.metadata_example;
+      (* send_meta_payload Client_utils.Requests_input.metadata_example;
+      get_jobs { job_client_req = "ocamlpro" }; *)
+    ] in
+  List.iter (fun test -> test api) requests ;
+  if !nrequests > 0 then (
+    waiting := true ;
+    EzLwtSys.run (fun () -> waiter))
