@@ -131,3 +131,14 @@ let send_job_metadata : (meta_payload, jobs, server_error_type, no_security) pos
   ~errors:Errors.server_errors
   Path.(root // "job_metadata")
 
+(** Service to transfer zip archive from client to server *)
+let post_zip_send : (general_comm2, general_comm2 , server_error_type, no_security) post_service0 =
+  post_service
+  ~section:section_main
+  ~name:"post : tranfer zip"
+  ~descr:"Sending ZIP archive"
+  ~params:[]
+  ~input:general_comm2_enc
+  ~output:general_comm2_enc
+  ~errors:Errors.server_errors
+  Path.(root // "base_blob_ws")

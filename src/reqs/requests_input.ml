@@ -119,6 +119,14 @@ let g_comm =
     error_desc = "error test";
   }
 
+let g_comm2 =
+  {
+    comm_desc_2 = "ok";
+    client_infos = "ocamlpro";
+    infos_b = [];
+    error_desc = "";
+  }
+
 let metadata_example =
   {
     archive_name = "/home/elias/OCP/ez_pb_client/example.zip";
@@ -126,7 +134,8 @@ let metadata_example =
     comment = "this is an example comment, unused in data exchange";
     priority = 300;
     checksum_type = "MD5";
-    checksum = Digest.file "/home/elias/OCP/ez_pb_client/example.zip" |> Digest.to_hex;
+    checksum =
+      Digest.file "/home/elias/OCP/ez_pb_client/example.zip" |> Digest.to_hex;
     info = "first draft of metadata exchange service";
     error = "Should be no error";
     code = 200;

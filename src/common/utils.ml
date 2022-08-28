@@ -66,10 +66,10 @@ let default_server_response_to_string elem =
 
 let meta_payload_to_string (meta : Data_types.meta_payload) =
   Printf.sprintf
-    "archive_name = %s; client_id = %s; comment = %s; priority = %d; checksum_type = %s; \
-     checksum = %s; info = %s; error = %s; code = %d"
-    meta.archive_name meta.client_id meta.comment meta.priority meta.checksum_type
-    meta.checksum meta.info meta.error meta.code
+    "archive_name = %s; client_id = %s; comment = %s; priority = %d; \
+     checksum_type = %s; checksum = %s; info = %s; error = %s; code = %d"
+    meta.archive_name meta.client_id meta.comment meta.priority
+    meta.checksum_type meta.checksum meta.info meta.error meta.code
 
 let meta_payload_from_string archive_name client_id comment priority
     checksum_type checksum info error code =
@@ -115,11 +115,24 @@ let check_password_validity password =
 
 let mime_zip = [ Option.get @@ Mime.parse "application/zip" ]
 
+(* let get_bytes fn =
+   let inc = open_in_bin fn in
+   (* let rec go sofar =
+     match input_line inc with
+     | b -> go (b :: sofar)
+     | exception End_of_file -> List.rev sofar in
+   let res = go [] in
+   close_in inc ;
+   res *)
+   let res = Buffer.create (in_channel_length inc) in
+   really_input inc (Buffer.to_bytes res) 0 (in_channel_length inc);
+   Buffer.contents res *)
+
 let get_bytes fn =
   let inc = open_in_bin fn in
   let rec go sofar =
-    match input_byte inc with
-    | b -> go (b :: sofar)
+    match input_char inc with
+    | b -> go (Char.code b :: sofar)
     | exception End_of_file -> List.rev sofar in
   let res = go [] in
   close_in inc ;

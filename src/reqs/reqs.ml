@@ -152,6 +152,19 @@ let test_signup arg api =
           (Utils.default_server_response_to_string r) ;
         end_request ())
 
+let glob_zip_test arg api =
+  begin_request () ;
+  EzRequest.ANY.post0 ~msg:"Testing zip send blob : "
+    ~error:(error "blob zip failed") ~input:arg api Services.post_zip_send
+    (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        end_request ()
+    | Ok r ->
+        (* Printf.eprintf "%s" (Utils.default_server_response_to_string r); *)
+        EzDebug.printf "go check file" ;
+        end_request ())
+
 (* **************************************************** *)
 
 (** Source for test zip *)
@@ -159,7 +172,7 @@ let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
 
 (* Websocket client test *)
 
-let g_base = ref ""
+let g_base = ref "" (* used to store checksum obtained from ws *)
 
 let client_zt_react _send = function
   | Ok s ->
@@ -175,12 +188,13 @@ let handle_zt { conn; action = { send; close } } =
   let rec send_zip () =
     if compare (String.split_on_char ' ' !g_base |> List.hd) "echo" = 0 then (
       EzDebug.printf "Stop connection" ;
+      g_base := "" ;
       Lwt.return_ok ())
     else (
       EzDebug.printf "sending zip in client handler" ;
       send @@ zip_to_str ztest >>= function
       | Error _ -> close None
-      | Ok () -> Lwt.bind (EzLwtSys.sleep 10.) (fun () -> send_zip ())) in
+      | Ok () -> Lwt.bind (EzLwtSys.sleep 5.) (fun () -> send_zip ())) in
   Lwt.choose [ conn; send_zip () ]
 
 (* **************************************************** *)
@@ -229,9 +243,11 @@ let () =
   let api = BASE api in
   let requests =
     [
-      send_meta_payload Client_utils.Requests_input.metadata_example;
+      glob_zip_test
+        {R_i.Requests_input.g_comm2 with infos_b = (get_bytes ztest)} 
+      (* send_meta_payload Client_utils.Requests_input.metadata_example; *)
       (* send_meta_payload Client_utils.Requests_input.metadata_example;
-      get_jobs { job_client_req = "ocamlpro" }; *)
+         get_jobs { job_client_req = "ocamlpro" }; *);
     ] in
   List.iter (fun test -> test api) requests ;
   if !nrequests > 0 then (

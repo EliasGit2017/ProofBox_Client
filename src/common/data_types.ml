@@ -59,7 +59,18 @@ type general_comm = {
   error_desc : string;
 }
 
-type toml_error_type = | Bad_toml_format | Toml_not_found | Multiple_Toml_files | Unknown
+type general_comm2 = {
+  comm_desc_2 : string;
+  client_infos : string;
+  infos_b : int list;
+  error_desc : string;
+}
+
+type toml_error_type =
+  | Bad_toml_format
+  | Toml_not_found
+  | Multiple_Toml_files
+  | Unknown
 
 exception Toml_error of toml_error_type
 
