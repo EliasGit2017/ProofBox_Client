@@ -20,6 +20,8 @@ type jobs_descr = {
   job_ref_tag : int;
   order_ts : string;
   path_to_f : string;
+  checksum_type : string;
+  checksum : string;
   priority : int;
   status : string;
 }
@@ -63,6 +65,8 @@ type general_comm2 = {
   comm_desc_2 : string;
   client_infos : string;
   infos_b : int list;
+  checksum_type : string;
+  checksum : string;
   error_desc : string;
 }
 
@@ -88,5 +92,17 @@ type meta_payload = {
   checksum : string;
   info : string;
   error : string;
+  code : int;
+}
+
+type job_payload = {
+  job_archive_name : string;
+  job_client_id : string;
+  desc : string;
+  infos_pb : int list;
+  checksum_type : string;
+  checksum : string;
+  priority : int;
+  job_return : jobs_descr list;
   code : int;
 }

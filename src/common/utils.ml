@@ -50,6 +50,15 @@ let job_list_to_string job_l =
           job_client job_ref_tag order_ts path_to_f priority status)
     "" job_l
 
+let job_payload_to_string (j_p : job_payload) =
+  Printf.sprintf
+    "job_archive_name = %s; job_client_id = %s; desc = %s; checksum_type = %s;\n\
+    \  checksum = %s; priority = %d; job_return = %s; code = %d"
+    j_p.job_archive_name j_p.job_client_id j_p.desc j_p.checksum_type
+    j_p.checksum j_p.priority
+    (job_list_to_string j_p.job_return)
+    j_p.code
+
 let default_server_response_from_string _comm_des _client_infos _infos
     error_desc =
   {
@@ -63,6 +72,24 @@ let default_server_response_to_string elem =
   Printf.sprintf
     "comm_desc = %s; client_infos = %s; infos = %s; error_desc = %s"
     elem.comm_desc elem.client_infos elem.infos elem.error_desc
+
+let gen_comm2_from_string _comm_desc_2 _client_infos _infos _checksum_type
+    _checksum error_desc =
+  {
+    comm_desc_2 = _comm_desc_2;
+    client_infos = _client_infos;
+    infos_b = _infos;
+    checksum_type = _checksum_type;
+    checksum = _checksum;
+    error_desc;
+  }
+
+let gen_comm2_to_string elem =
+  Printf.sprintf
+    "{ comm_desc_2 = %s; client_infos = %s; checksum_type = %s; checksum = %s; \
+     error_desc = %s }\n"
+    elem.comm_desc_2 elem.client_infos elem.checksum_type elem.checksum
+    elem.error_desc
 
 let meta_payload_to_string (meta : Data_types.meta_payload) =
   Printf.sprintf

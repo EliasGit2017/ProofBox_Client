@@ -11,6 +11,9 @@ let user1_login = "test_user60"
 let user1_password = "dummydedada1234!"
 let user1_info = "This user is also here for testing purposes"
 
+(** Source for test zip *)
+let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
+
 (* lwt management *)
 let waiter, finalizer = Lwt.wait ()
 let waiting = ref false
@@ -152,23 +155,7 @@ let test_signup arg api =
           (Utils.default_server_response_to_string r) ;
         end_request ())
 
-let glob_zip_test arg api =
-  begin_request () ;
-  EzRequest.ANY.post0 ~msg:"Testing zip send blob : "
-    ~error:(error "blob zip failed") ~input:arg api Services.post_zip_send
-    (function
-    | Error e ->
-        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
-        end_request ()
-    | Ok r ->
-        (* Printf.eprintf "%s" (Utils.default_server_response_to_string r); *)
-        EzDebug.printf "go check file" ;
-        end_request ())
-
 (* **************************************************** *)
-
-(** Source for test zip *)
-let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
 
 (* Websocket client test *)
 
@@ -213,6 +200,32 @@ let my_zt_ws_main () =
           end_request () ;
           Lwt.return_unit)
 
+let glob_zip_test arg api =
+  begin_request () ;
+  EzRequest.ANY.post0 ~msg:"Testing zip send blob : "
+    ~error:(error "blob zip failed") ~input:arg api Services.post_zip_send
+    (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        end_request ()
+    | Ok r ->
+        EzDebug.printf "go check file" ;
+        Printf.eprintf "%s" (Utils.gen_comm2_to_string r) ;
+        end_request ())
+
+let main_send_zip arg api =
+  begin_request () ;
+  EzRequest.ANY.post0 ~msg:"Main server send zip v1 : "
+    ~error:(error "Blob ZIP SEND MAIN FAILED")
+    ~input:arg api Services.send_job_main_service (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        end_request ()
+    | Ok r ->
+        Printf.eprintf "Return Json for main send : \n %s"
+          (job_payload_to_string r) ;
+        end_request ())
+
 (** Request to send meta_payload : returns all the jobs associated to the client
     who initiated the exchange *)
 let send_meta_payload arg api =
@@ -229,8 +242,15 @@ let send_meta_payload arg api =
     | Ok r ->
         Printf.eprintf "Jobs : %s\n%!" (job_list_to_string r) ;
         (* run websocket once job is inserted in db all all given jobs are returned *)
-        let _ = my_zt_ws_main () in
+        (* let _ = my_zt_ws_main () in *)
+        main_send_zip
+          {
+            R_i.Requests_input.job_payload_example with
+            infos_pb = get_bytes ztest;
+          }
+          api ;
         end_request ())
+
 (* **************************************************** *)
 
 let () =
@@ -239,15 +259,16 @@ let () =
 
   (* EzLwtSys.run my_zt_ws_main  *)
   let api = Printf.sprintf "http://localhost:%d" !api_port in
-  print_endline ("sending reqs to " ^ api) ;
+
   let api = BASE api in
   let requests =
     [
-      glob_zip_test
-        {R_i.Requests_input.g_comm2 with infos_b = (get_bytes ztest)} 
-      (* send_meta_payload Client_utils.Requests_input.metadata_example; *)
-      (* send_meta_payload Client_utils.Requests_input.metadata_example;
-         get_jobs { job_client_req = "ocamlpro" }; *);
+      (* send_meta_payload R_i.Requests_input.metadata_example; *)
+      main_send_zip
+        {
+          R_i.Requests_input.job_payload_example with
+          infos_pb = get_bytes ztest;
+        };
     ] in
   List.iter (fun test -> test api) requests ;
   if !nrequests > 0 then (

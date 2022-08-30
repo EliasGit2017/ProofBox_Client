@@ -90,6 +90,8 @@ let jobs =
       job_ref_tag = 1;
       order_ts = "2022-08-10 18:24:22";
       path_to_f = "root";
+      checksum_type = "MD5";
+      checksum = "None";
       priority = 100;
       status = "scheduled";
     };
@@ -98,6 +100,8 @@ let jobs =
       job_ref_tag = 2;
       order_ts = "2022-08-10 18:24:22";
       path_to_f = "root";
+      checksum_type = "MD5";
+      checksum = "None";
       priority = 200;
       status = "scheduled";
     };
@@ -106,6 +110,8 @@ let jobs =
       job_ref_tag = 3;
       order_ts = "2022-08-10 18:24:22";
       path_to_f = "root";
+      checksum_type = "MD5";
+      checksum = "None";
       priority = 300;
       status = "scheduled";
     };
@@ -124,6 +130,8 @@ let g_comm2 =
     comm_desc_2 = "ok";
     client_infos = "ocamlpro";
     infos_b = [];
+    checksum_type = "";
+    checksum = "";
     error_desc = "";
   }
 
@@ -134,9 +142,20 @@ let metadata_example =
     comment = "this is an example comment, unused in data exchange";
     priority = 300;
     checksum_type = "MD5";
-    checksum =
-      Digest.file "/home/elias/OCP/ez_pb_client/example.zip" |> Digest.to_hex;
+    checksum = "None";
     info = "first draft of metadata exchange service";
     error = "Should be no error";
     code = 200;
   }
+
+let job_payload_example = {
+  job_archive_name = "example.zip";
+  job_client_id = "ocamlpro";
+  desc = "job example for test";
+  infos_pb = [];
+  checksum_type = "MD5";
+  checksum = "";
+  priority = 300;
+  job_return = [];
+  code = 0;
+}

@@ -142,3 +142,14 @@ let post_zip_send : (general_comm2, general_comm2 , server_error_type, no_securi
   ~output:general_comm2_enc
   ~errors:Errors.server_errors
   Path.(root // "base_blob_ws")
+
+let send_job_main_service : (job_payload, job_payload, server_error_type, no_security) post_service0 =
+  post_service
+  ~section:section_main
+  ~name:"Job submission through post0 service containing blob zip archive in "
+  ~descr:"Sending ZIP archive & associated metadata"
+  ~params:[]
+  ~input:job_payload_enc
+  ~output:job_payload_enc
+  ~errors:Errors.server_errors
+  Path.(root // "main_job_send")
