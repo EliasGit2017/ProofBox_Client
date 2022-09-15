@@ -93,3 +93,10 @@ type nonrec job_payload = Data_types.job_payload = {
   code : int;
 }
 [@@deriving json_encoding { remove_prefix = false }]
+
+type nonrec job_cache = Data_types.job_cache = {
+  job_id : int;
+  path_to_res : string;
+  time : string;
+  status : string;
+}[@@deriving json_encoding { remove_prefix = false }]

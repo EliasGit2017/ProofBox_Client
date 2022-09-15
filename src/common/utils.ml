@@ -175,3 +175,8 @@ let zip_to_str zip_name =
   let res = serialize [] in
   close_in zc ;
   String.of_seq (List.to_seq res)
+
+let write_to_dest fn ints =
+  let outc = open_out_bin fn in
+  List.iter (fun b -> output_char outc (Char.chr b)) ints;
+  close_out outc

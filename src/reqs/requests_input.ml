@@ -149,7 +149,7 @@ let metadata_example =
   }
 
 let job_payload_example = {
-  job_archive_name = "example.zip";
+  job_archive_name = "light.zip";
   job_client_id = "ocamlpro";
   desc = "job example for test";
   infos_pb = [];

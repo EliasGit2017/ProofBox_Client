@@ -66,6 +66,8 @@ let err_toml_print e =
   | Multiple_Toml_files -> "Toml.error.multiple_toml_found"
   | Unknown -> "Toml.error.unknown"
 
+(* **************************************************** *)
+
 (* Unix : tools *)
 
 (** Returns a string describing Unix error status code *)
@@ -125,6 +127,31 @@ let get_main_toml working_dir =
   if List.length res > 1 then raise (Toml_error Multiple_Toml_files)
   else working_dir ^ List.hd res
 (* get absolute path through Sys ? instead of working_dir arg ? *)
+
+let retrieve_toml_values toml_dir =
+  let parsed_toml = Otoml.Parser.from_file (get_main_toml toml_dir) in
+  let htab_toml_values = Hashtbl.create 10 in
+  try
+    Hashtbl.add htab_toml_values "title" (get_title parsed_toml) ;
+    Hashtbl.add htab_toml_values "owner_username"
+      (get_owner_username parsed_toml) ;
+    Hashtbl.add htab_toml_values "owner_email" (get_owner_email parsed_toml) ;
+    Hashtbl.add htab_toml_values "owner_bio" (get_owner_bio parsed_toml) ;
+    Hashtbl.add htab_toml_values "owner_password"
+      (get_owner_password parsed_toml) ;
+    Hashtbl.add htab_toml_values "jd_job_id"
+      (string_of_int @@ get_jd_job_id parsed_toml) ;
+    Hashtbl.add htab_toml_values "jd_solver" (get_jd_solver parsed_toml) ;
+    Hashtbl.add htab_toml_values "jd_solver_version"
+      (get_jd_solver_version parsed_toml) ;
+    Hashtbl.add htab_toml_values "jd_synopsis" (get_jd_job_synopsis parsed_toml) ;
+    Hashtbl.add htab_toml_values "jd_path_to_client_repo"
+      (get_jd_path_tof parsed_toml) ;
+    htab_toml_values
+  with Type_error _ | Key_error _ ->
+    print_endline @@ Printf.sprintf "Badly formatted TOML at : %s" (get_main_toml toml_dir) ;
+    raise (Toml_error Bad_toml_format)
+
 
 (** [dir_contents] returns the paths of all regular files ([.smt2] && [.ae])
     that are contained in [dir]. Each file is a path starting with [dir].*)

@@ -12,7 +12,7 @@ let user1_password = "dummydedada1234!"
 let user1_info = "This user is also here for testing purposes"
 
 (** Source for test zip *)
-let ztest = "/home/elias/OCP/ez_pb_client/example.zip"
+let ztest = "/home/elias/OCP/ez_pb_client/light.zip"
 
 (* lwt management *)
 let waiter, finalizer = Lwt.wait ()
@@ -226,6 +226,20 @@ let main_send_zip arg api =
           (job_payload_to_string r) ;
         end_request ())
 
+let retrieve arg api = 
+  begin_request ();
+  EzRequest.ANY.post0 ~msg:"Main server retrieve zip v1 : "
+    ~error:(error "Blob ZIP RETRIEVE MAIN FAILED")
+    ~input:arg api Services.retrieve_job_result (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        end_request ()
+    | Ok r ->
+        Printf.eprintf "Return Json for main send : \n %s"
+          (job_payload_to_string r) ;
+          Utils.write_to_dest "/home/elias/OCP/ez_pb_client/ok.zip" r.infos_pb;
+        end_request ())
+
 (** Request to send meta_payload : returns all the jobs associated to the client
     who initiated the exchange *)
 let send_meta_payload arg api =
@@ -256,7 +270,6 @@ let send_meta_payload arg api =
 let () =
   Printexc.record_backtrace true ;
   EzCohttp.init () ;
-
   (* EzLwtSys.run my_zt_ws_main  *)
   let api = Printf.sprintf "http://localhost:%d" !api_port in
 
@@ -264,11 +277,12 @@ let () =
   let requests =
     [
       (* send_meta_payload R_i.Requests_input.metadata_example; *)
-      main_send_zip
+      (* main_send_zip
         {
           R_i.Requests_input.job_payload_example with
           infos_pb = get_bytes ztest;
-        };
+        }; *)
+      retrieve { R_i.Requests_input.job_payload_example with desc = "3"};
     ] in
   List.iter (fun test -> test api) requests ;
   if !nrequests > 0 then (
