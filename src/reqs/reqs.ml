@@ -97,6 +97,18 @@ let get_specific_job arg api =
         Printf.eprintf "Job : %s\n%!" (job_list_to_string r) ;
         end_request ())
 
+let get_cache arg api =
+  begin_request () ;
+  EzRequest.ANY.post0 ~msg:"getting jobs from user : "
+    ~error:(error "Unable to get jobs |get_jobs| request")
+    ~input:arg api Services.consult_cache (function
+    | Error e ->
+        Printf.eprintf "%s\n%!" @@ Printexc.to_string (proofbox_api_error e) ;
+        end_request ()
+    | Ok r ->
+        Printf.eprintf "Cache :\n%s\n%!" (cache_list_to_string r.job_return) ;
+        end_request ())
+
 let test_session arg api =
   let open EzSession.TYPES in
   begin_request () ;
@@ -237,7 +249,7 @@ let retrieve arg api =
     | Ok r ->
         Printf.eprintf "Return Json for main send : \n %s"
           (job_payload_to_string r) ;
-        Utils.write_to_dest "/home/elias/OCP/ez_pb_client/proofbox_job.zip"
+        Utils.write_to_dest arg.checksum
           r.infos_pb ;
         end_request ())
 
@@ -295,9 +307,15 @@ let () =
         "Send job to server" );
       ( "--retrieve-job",
         Arg.String
-          (fun i ->
+          (fun s ->
+            let l_s = String.split_on_char ':' s in
             requests :=
-              retrieve { R_i.Requests_input.job_payload_example with desc = i }
+              retrieve
+                {
+                  R_i.Requests_input.job_payload_example with
+                  desc = List.hd l_s;
+                  checksum = List.nth l_s 1;
+                }
               :: !requests),
         "Retrieve job from server once an email is received" );
       ( "--signup",
@@ -314,7 +332,40 @@ let () =
                   CalendarLib.Printer.Time.to_string @@ CalendarLib.Time.now ();
               } in
             requests := signup user :: !requests),
-        "Signup new user : username/email/password/user_desc don't forget to \\ spaces and slash chars" );
+        "Signup new user : username/email/password/user_desc don't forget to \
+         \\ spaces and slash chars" );
+      ( "--consult-jobs",
+        Arg.String
+          (fun s ->
+            let user = { job_client_req = s } in
+            requests := get_jobs user :: !requests),
+        "Consult all jobs on the server from : username (jobs with status done \
+         as well as jobs with status scheduled)" );
+      ( "--consult-specific-job",
+        Arg.String
+          (fun s ->
+            let l_s = String.split_on_char '/' s in
+            let job_tag =
+              {
+                job_client = List.hd l_s;
+                job_ref_tag_v = int_of_string (List.nth l_s 1);
+              } in
+            requests := get_specific_job job_tag :: !requests),
+        "Consult specific job on the server from : username with id" );
+      ( "--consult-cache",
+        Arg.String
+          (fun s ->
+            let l_s = String.split_on_char '/' s in
+            let job_tag =
+              {
+                job_archive_name = "None";
+                job_client_id = List.hd l_s;
+                desc = List.nth l_s 1;
+                job_return = [];
+                code = 0;
+              } in
+            requests := get_cache job_tag :: !requests),
+        "Consult cache stored on the server for : username/desc " );
     ]
     (fun s -> Printf.eprintf "Error: unexpected argument %S\nAborting.\n%!" s)
     "proofbox-client [--cmd] < Options : ... change to cmdliner when time \

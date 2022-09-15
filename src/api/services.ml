@@ -164,3 +164,13 @@ let retrieve_job_result : (job_payload, job_payload, server_error_type, no_secur
   ~output:job_payload_enc
   ~errors:Errors.server_errors
   Path.(root // "retrieve_job_result")
+  let consult_cache : (job_payload_cache, job_payload_cache, server_error_type, no_security) post_service0 =
+    post_service
+    ~section:section_main
+    ~name:"Retrieve cache for specific user"
+    ~descr:"get all cached jobs for user"
+    ~params:[]
+    ~input:job_payload_cache_enc
+    ~output:job_payload_cache_enc
+    ~errors:Errors.server_errors
+    Path.(root // "retrieve_jobs_cache")

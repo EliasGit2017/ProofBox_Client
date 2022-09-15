@@ -50,6 +50,16 @@ let job_list_to_string job_l =
           job_client job_ref_tag order_ts path_to_f priority status)
     "" job_l
 
+let cache_list_to_string cache_l =
+  List.fold_left
+    (fun res (u_cache : Data_types.job_cache) ->
+      res
+      ^ Printf.sprintf
+          "{ job_id = %d; path_to_f =%s ; \
+           time_of_completion = %s; status = %s }\n"
+          u_cache.job_id u_cache.path_to_res u_cache.time u_cache.status)
+    "" cache_l
+
 let job_payload_to_string (j_p : job_payload) =
   Printf.sprintf
     "job_archive_name = %s; job_client_id = %s; desc = %s; checksum_type = %s;\n\
