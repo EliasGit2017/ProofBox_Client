@@ -237,7 +237,8 @@ let retrieve arg api =
     | Ok r ->
         Printf.eprintf "Return Json for main send : \n %s"
           (job_payload_to_string r) ;
-        Utils.write_to_dest "/home/elias/OCP/ez_pb_client/proofbox_job.zip" r.infos_pb ;
+        Utils.write_to_dest "/home/elias/OCP/ez_pb_client/proofbox_job.zip"
+          r.infos_pb ;
         end_request ())
 
 (** Request to send meta_payload : returns all the jobs associated to the client
@@ -273,10 +274,7 @@ let () =
   (* EzLwtSys.run my_zt_ws_main  *)
   let api = Printf.sprintf "http://localhost:%d" !api_port in
   let api = BASE api in
-  let requests =
-    ref
-      [ ]
-  in
+  let requests = ref [] in
   let open Stdlib in
   let open Read_write_toml in
   Arg.parse
@@ -285,7 +283,7 @@ let () =
         Arg.String
           (fun s ->
             let e = Sys.getcwd () in
-            let zip_path = (e ^ "/jobs.zip") in
+            let zip_path = e ^ "/jobs.zip" in
             Utils.make_zipbundle ~keep_dir_struct:false s zip_path ;
             requests :=
               main_send_zip
@@ -302,9 +300,25 @@ let () =
               retrieve { R_i.Requests_input.job_payload_example with desc = i }
               :: !requests),
         "Retrieve job from server once an email is received" );
+      ( "--signup",
+        Arg.String
+          (fun s ->
+            let l_s = String.split_on_char '/' s in
+            let user =
+              {
+                username = List.hd l_s;
+                email = List.nth l_s 1;
+                password = List.nth l_s 2;
+                user_desc = List.nth l_s 3;
+                first_login_date =
+                  CalendarLib.Printer.Time.to_string @@ CalendarLib.Time.now ();
+              } in
+            requests := signup user :: !requests),
+        "Signup new user : username/email/password/user_desc don't forget to \\ spaces and slash chars" );
     ]
     (fun s -> Printf.eprintf "Error: unexpected argument %S\nAborting.\n%!" s)
-    "proofbox-client [--cmd] < Options : ... change to cmdliner when time available >" ;
+    "proofbox-client [--cmd] < Options : ... change to cmdliner when time \
+     available >" ;
 
   List.iter (fun test -> test api) !requests ;
   if !nrequests > 0 then (
