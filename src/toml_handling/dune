@@ -3,7 +3,7 @@
  (modules utils)
  (libraries otoml camlzip data_common unix stdlib-shims str))
 
-(executable
+(library
  (name config_verif)
  (modules config_verif)
  (libraries otoml read_write_toml))

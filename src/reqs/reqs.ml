@@ -142,7 +142,7 @@ let test_session arg api =
                     @@ Printexc.to_string (proofbox_api_error e) ;
                     end_request ())))
 
-let test_signup arg api =
+let signup arg api =
   begin_request () ;
   EzRequest.ANY.post0 ~msg:"Testing signup service : "
     ~error:(error "Unable to Signup User : [test_signup]")
@@ -226,8 +226,8 @@ let main_send_zip arg api =
           (job_payload_to_string r) ;
         end_request ())
 
-let retrieve arg api = 
-  begin_request ();
+let retrieve arg api =
+  begin_request () ;
   EzRequest.ANY.post0 ~msg:"Main server retrieve zip v1 : "
     ~error:(error "Blob ZIP RETRIEVE MAIN FAILED")
     ~input:arg api Services.retrieve_job_result (function
@@ -237,7 +237,7 @@ let retrieve arg api =
     | Ok r ->
         Printf.eprintf "Return Json for main send : \n %s"
           (job_payload_to_string r) ;
-          Utils.write_to_dest "/home/elias/OCP/ez_pb_client/ok.zip" r.infos_pb;
+        Utils.write_to_dest "/home/elias/OCP/ez_pb_client/proofbox_job.zip" r.infos_pb ;
         end_request ())
 
 (** Request to send meta_payload : returns all the jobs associated to the client
@@ -272,19 +272,41 @@ let () =
   EzCohttp.init () ;
   (* EzLwtSys.run my_zt_ws_main  *)
   let api = Printf.sprintf "http://localhost:%d" !api_port in
-
   let api = BASE api in
   let requests =
+    ref
+      [ ]
+  in
+  let open Stdlib in
+  let open Read_write_toml in
+  Arg.parse
     [
-      (* send_meta_payload R_i.Requests_input.metadata_example; *)
-      (* main_send_zip
-        {
-          R_i.Requests_input.job_payload_example with
-          infos_pb = get_bytes ztest;
-        }; *)
-      retrieve { R_i.Requests_input.job_payload_example with desc = "3"};
-    ] in
-  List.iter (fun test -> test api) requests ;
+      ( "--send-job",
+        Arg.String
+          (fun s ->
+            let e = Sys.getcwd () in
+            let zip_path = (e ^ "/jobs.zip") in
+            Utils.make_zipbundle ~keep_dir_struct:false s zip_path ;
+            requests :=
+              main_send_zip
+                {
+                  R_i.Requests_input.job_payload_example with
+                  infos_pb = get_bytes zip_path;
+                }
+              :: !requests),
+        "Send job to server" );
+      ( "--retrieve-job",
+        Arg.String
+          (fun i ->
+            requests :=
+              retrieve { R_i.Requests_input.job_payload_example with desc = i }
+              :: !requests),
+        "Retrieve job from server once an email is received" );
+    ]
+    (fun s -> Printf.eprintf "Error: unexpected argument %S\nAborting.\n%!" s)
+    "proofbox-client [--cmd] < Options : ... change to cmdliner when time available >" ;
+
+  List.iter (fun test -> test api) !requests ;
   if !nrequests > 0 then (
     waiting := true ;
     EzLwtSys.run (fun () -> waiter))

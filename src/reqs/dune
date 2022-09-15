@@ -9,7 +9,7 @@
  (modules reqs)
  (libraries ez_api ez_api.req ez_api.req_lwt ez_api.request ez_api.session_client 
             data_common api_services safepass ez_api.icohttp ez_api.icohttp_lwt
-            ez_api.server ez_api.server_session r_i ez_api.ws_cohttp)
+            ez_api.server ez_api.server_session r_i ez_api.ws_cohttp read_write_toml)
 (preprocess (pps lwt_ppx)))
 
 (executable

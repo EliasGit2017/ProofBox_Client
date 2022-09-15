@@ -27,6 +27,7 @@ db-update: config/db-version.txt db-updater
 
 build: db-update
 	dune build --profile release
+	sudo cp ./_build/default/src/reqs/reqs.exe /usr/local/bin/proofbox-client
 
 website: config/info.json
 	@mkdir -p www
