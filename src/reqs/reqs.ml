@@ -249,8 +249,7 @@ let retrieve arg api =
     | Ok r ->
         Printf.eprintf "Return Json for main send : \n %s"
           (job_payload_to_string r) ;
-        Utils.write_to_dest arg.checksum
-          r.infos_pb ;
+        Utils.write_to_dest arg.checksum r.infos_pb ;
         end_request ())
 
 (** Request to send meta_payload : returns all the jobs associated to the client
@@ -303,7 +302,9 @@ let () =
                   R_i.Requests_input.job_payload_example with
                   infos_pb = get_bytes zip_path;
                 }
-              :: !requests),
+              :: !requests ;
+            let _ = Sys.command ("rm " ^ zip_path) in
+            ()),
         "Send job to server" );
       ( "--retrieve-job",
         Arg.String
